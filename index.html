@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Laboratorio interactivo de probabilidad: reglas, condicional, probabilidad total y teorema de Bayes. Estadística Inferencial, UNIMAYOR.">
+<title>Laboratorio de Probabilidad</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%231F2761%22/%3E%3Ccircle%20cx%3D%2225%22%20cy%3D%2232%22%20r%3D%2214%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%224%22/%3E%3Ccircle%20cx%3D%2239%22%20cy%3D%2232%22%20r%3D%2214%22%20fill%3D%22none%22%20stroke%3D%22%238FB4E8%22%20stroke-width%3D%224%22/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout: cuaderno de laboratorio — columna central, una sección por tema de clase, cada una con su "banco de pruebas" interactivo */
+:root{
+  --paper:#F4F6FA; --card:#FFFFFF; --ink:#172042; --muted:#59627E; --line:#D7DCE8; --soft:#E9EDF6;
+  --navy:#1F2761; --navy-ink:#FFFFFF;
+  --a:#2668B0; --a-soft:#DCE9F7; --b:#C66A12; --b-soft:#FBE8D3;
+  --sum:#2B7A3A; --sum-soft:#E2F1E4; --mul:#B5423D; --mul-soft:#F7E1DF;
+  --ok:#2B7A3A; --bad:#B5423D;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0E1325; --card:#161C33; --ink:#E5E8F4; --muted:#9AA3C2; --line:#2B3454; --soft:#1D2440;
+  --navy:#9FB0F2; --navy-ink:#0E1325;
+  --a:#6FA9EA; --a-soft:#1E3352; --b:#F0A35A; --b-soft:#43301C;
+  --sum:#73C27C; --sum-soft:#1D3A24; --mul:#F07F79; --mul-soft:#46221F;
+  --ok:#73C27C; --bad:#F07F79; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1325; --card:#161C33; --ink:#E5E8F4; --muted:#9AA3C2; --line:#2B3454; --soft:#1D2440;
+  --navy:#9FB0F2; --navy-ink:#0E1325;
+  --a:#6FA9EA; --a-soft:#1E3352; --b:#F0A35A; --b-soft:#43301C;
+  --sum:#73C27C; --sum-soft:#1D3A24; --mul:#F07F79; --mul-soft:#46221F;
+  --ok:#73C27C; --bad:#F07F79; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);color:var(--navy);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2rem,5vw,3.1rem);font-weight:700}
+h2{font-size:clamp(1.5rem,3.4vw,2rem);font-weight:700}
+h3{font-size:1.15rem;font-weight:500}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.treekey .muted,.treekey span.muted{color:var(--muted);font-weight:600}
+.eyebrow{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+
+/* Encabezado */
+header.hero{padding-block:40px 20px;display:grid;gap:14px}
+.hero .lead{max-width:62ch;color:var(--muted);font-size:1.05rem}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* Navegación */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);margin-bottom:8px}
+nav.tabs .scroller{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:thin}
+nav.tabs a{flex:none;text-decoration:none;color:var(--ink);font-size:.88rem;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);white-space:nowrap}
+nav.tabs a:hover{border-color:var(--navy)}
+
+section{padding-block:36px 8px;border-top:1px solid var(--line);display:grid;gap:18px;scroll-margin-top:64px}
+section:first-of-type{border-top:0}
+.head{display:grid;gap:6px}
+.head p{max-width:68ch;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px;min-width:0}
+.formula{font-family:var(--f-mono);font-size:1rem;background:var(--soft);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.big{font-family:var(--f-mono);font-size:1.6rem;font-weight:500;color:var(--navy)}
+.note{font-size:.92rem;color:var(--muted)}
+.ca,.cb,.cm,.cs,.cn{color:var(--navy);font-weight:400}
+.formula b.fx{font-weight:700;color:var(--ink)}
+.panel{align-content:start}
+#mF,#trMsg{white-space:normal}
+#trSteps a.step{color:var(--ink);text-decoration:none}
+#trMsg a{color:var(--navy);text-decoration:none}
+.formula strong,.fact strong,strong.ca,strong.cb,strong.cm,strong.cs,strong.cn{font-weight:400}
+.fact .ca,.fact .cb,.fact .cm,.fact .cs,.fact .cn{color:var(--navy)}
+.hl{background:var(--a-soft);border-radius:3px;padding:0 3px}
+.formula .ca,.formula .cb,.formula .cm,.formula .cs,.formula .cn{font-weight:400}
+.fact{display:grid;align-content:start;gap:6px;padding:12px 14px;background:var(--soft);border-radius:8px;font-size:.92rem;color:var(--ink);min-width:0}
+.fact-v{font-family:var(--f-display);font-size:1.35rem;font-weight:400;color:var(--navy);line-height:1.2}
+.fact-d{color:var(--muted);font-size:.88rem;line-height:1.5}
+.fact-t{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+#vFacts{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+#adicion .grid2{align-items:stretch}
+.venn-panel{align-content:center}
+
+.example{border:1px solid var(--line);border-left:4px solid var(--a);background:var(--card);border-radius:0 8px 8px 0;padding:14px 16px;display:grid;gap:6px}
+.example .eyebrow{color:var(--a)}
+.callout{border-left:3px solid var(--b);background:var(--b-soft);padding:10px 14px;border-radius:0 6px 6px 0;font-size:.95rem}
+
+/* Botones y controles */
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.92rem}
+.btn:hover{border-color:var(--navy)}
+.btn[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.btn.primary{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+label.ctl{display:grid;grid-template-columns:minmax(110px,auto) 1fr 64px;align-items:center;gap:10px;font-size:.92rem}
+label.ctl output{font-family:var(--f-mono);text-align:right}
+input[type=range]{width:100%;accent-color:var(--navy)}
+select{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 8px;max-width:100%}
+input[type=number]{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:4px 6px;width:5.2em;font-family:var(--f-mono)}
+
+/* Tablas */
+.tablebox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+thead th{background:var(--navy);color:var(--navy-ink);font-weight:600}
+.guide td:nth-child(5){font-size:.88rem;min-width:220px}
+.guide td:nth-child(4){font-family:var(--f-mono);font-size:.88rem;white-space:nowrap}
+.guide tr.hit td{background:var(--a-soft)}
+.ct td,.ct th{text-align:center;font-family:var(--f-mono)}
+.ct th{font-family:var(--f-body)}
+.ct td.num{background:var(--a-soft);font-weight:600;box-shadow:inset 0 0 0 2px var(--a)}
+.ct td.den{background:var(--b-soft)}
+.ct td.num.den{background:var(--a-soft)}
+.ct .tot{color:var(--muted)}
+
+/* Clasificador */
+.qcard{display:grid;gap:12px}
+.phrase{font-family:var(--f-display);font-size:1.25rem;color:var(--ink)}
+.fb{font-size:.95rem;padding:10px 12px;border-radius:6px}
+.fb.ok{background:var(--sum-soft);color:var(--ink);border-left:3px solid var(--ok)}
+.fb.no{background:var(--mul-soft);color:var(--ink);border-left:3px solid var(--bad)}
+.score{font-family:var(--f-mono);color:var(--muted);font-size:.9rem}
+
+/* SVG */
+svg text{font-family:var(--f-body)}
+svg text:not([fill]){fill:var(--ink)}
+svg .lbl{font-size:13px}
+svg .mut{fill:var(--muted)}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;max-width:100%;height:auto}
+#tree svg,#treeTot svg,#treeBay svg{min-width:760px}
+.treekey{display:grid;gap:6px;font-size:.92rem;background:var(--soft);border-radius:8px;padding:12px 14px}
+.treekey .mono{font-size:.88rem}
+
+/* Árbol: pasos */
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.step{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px 6px 6px;cursor:pointer;font-size:.92rem}
+.step b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;color:#fff;font-size:.8rem}
+.step[data-s="1"] b{background:var(--mul)} .step[data-s="2"] b{background:var(--sum)} .step[data-s="3"] b{background:var(--navy);color:var(--navy-ink)}
+.step[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.edit{display:grid;gap:8px}
+.edit .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.92rem}
+.edit .row strong{min-width:9em}
+.warn{color:var(--bad);font-size:.9rem}
+.card-total{border-top:4px solid var(--sum)}
+.card-bayes{border-top:4px solid var(--navy)}
+.card-total h3{color:var(--sum)}
+
+/* Errores */
+.err{display:grid;gap:4px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.err strong{color:var(--bad);font-weight:600}
+
+/* Práctica */
+.quiz{display:grid;gap:14px}
+.qitem{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px}
+.qitem .opts{display:flex;flex-wrap:wrap;gap:8px}
+.qtab{max-width:520px;font-size:.88rem}
+.qgrid{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:20px;align-items:start}
+.qleft{display:grid;gap:10px;min-width:0}
+.qgrid details.hint summary{width:max-content}
+.qgrid details.hint summary{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+@media (max-width:760px){.qgrid{grid-template-columns:1fr;gap:10px}}
+.qtab td,.qtab th{text-align:center}
+.qtab th[scope=row]{text-align:left}
+details.hint summary{cursor:pointer;color:var(--navy);font-weight:500;width:max-content}
+.hint-b{margin-top:8px}
+.hint-p{display:grid;gap:8px;padding:12px;background:var(--soft);border-radius:8px}
+.qside{display:grid;gap:10px;align-content:start;min-width:0}
+.hint-b p{margin:0}
+.hint-b .formula{white-space:normal}
+.hint-b a{color:var(--navy);text-decoration:none;font-weight:500}
+
+ol.walk{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:w}
+ol.walk>li{counter-increment:w;display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+ol.walk>li::before{content:counter(w);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--wc,var(--navy));color:#fff;font-weight:600;font-size:.9rem}
+ol.walk>li>div{display:grid;gap:6px;min-width:0}
+ol.walk h4{margin:0;font-size:1rem;font-family:var(--f-body);font-weight:600;color:var(--ink)}
+.walk-total>li{--wc:var(--sum)} .walk-bayes>li{--wc:var(--navy)}
+:root[data-theme="dark"] .walk-bayes>li::before{color:var(--navy-ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .walk-bayes>li::before{color:var(--navy-ink)}}
+.freq{display:flex;flex-wrap:wrap;gap:8px}
+.freq span{background:var(--soft);border-radius:6px;padding:6px 10px;font-family:var(--f-mono);font-size:.9rem}
+/* Módulos y progreso */
+.progress{display:flex;align-items:center;gap:12px;padding-block:4px 10px;font-size:.88rem;color:var(--muted)}
+.progress .bar{flex:1;height:8px;background:var(--soft);border-radius:999px;overflow:hidden;max-width:360px}
+.progress .bar i{display:block;height:100%;width:0;background:var(--sum);border-radius:999px}
+@media (prefers-reduced-motion:no-preference){.progress .bar i{transition:width .3s}}
+nav.tabs a[aria-current="page"]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+nav.tabs a.done::before{content:"✓ ";color:var(--sum);font-weight:700}
+nav.tabs a.done[aria-current="page"]::before{color:var(--navy-ink)}
+.modnav{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:16px;margin-top:6px}
+.modnav .mid{display:flex;gap:8px;align-items:center}
+.btn.done-btn[aria-pressed="true"]{background:var(--sum);border-color:var(--sum);color:#fff}
+.route{display:flex;flex-wrap:wrap;gap:6px;font-size:.85rem;color:var(--muted)}
+.route b{color:var(--ink)}
+section{border-top:0}
+/* Árbol en lista (celular) */
+.tlist{display:none}
+@media (max-width:720px){#tree,#treeTot,#treeBay{display:none}.tlist{display:block}}
+.tl,.tl ul{list-style:none;margin:0;padding:0}
+.tl ul{margin-left:14px;padding-left:14px;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:5px 0 5px 4px}
+.tl ul>li::before{content:"";position:absolute;left:-14px;top:17px;width:12px;border-top:2px solid var(--line)}
+.tl .node{display:inline-flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.tl .tag{display:inline-grid;place-items:center;min-width:28px;padding:1px 6px;border-radius:5px;border:2px solid currentColor;font-weight:700}
+.tl .faded{opacity:.35}
+.tl .sel>.node .tag{box-shadow:0 0 0 2px var(--navy)}
+.tl .joint{font-family:var(--f-mono);font-size:.85rem;color:var(--mul);font-weight:600;flex-basis:100%}
+.tl .joint.n{color:var(--muted);font-weight:400}
+.tbox{margin-top:8px;border-radius:8px;padding:10px 12px;font-family:var(--f-mono);font-size:.9rem}
+.tbox.sum{background:var(--sum-soft);border:1px solid var(--sum);color:var(--ink)}
+.tbox.div{background:var(--card);border:2px solid var(--navy)}
+footer{padding-block:28px 0;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);margin-top:28px}
+@media (prefers-reduced-motion:no-preference){.btn,.step,nav.tabs a{transition:border-color .15s,background .15s}}
+@media (max-width:520px){label.ctl{grid-template-columns:1fr 64px}label.ctl span{grid-column:1/-1}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <span class="eyebrow">UNIMAYOR · Estadística Inferencial · Semestre III · 2026-II</span>
+  <h1>Laboratorio de Probabilidad</h1>
+  <p class="lead">Mueve los controles, elige eventos y mira cómo cambian las probabilidades. Todo sigue las clases de enfoques y reglas de la probabilidad, el refuerzo de probabilidad condicional y la clase de probabilidad total y Bayes.</p>
+  <p class="route"><b>Ruta sugerida:</b> sigue los temas en orden con «Siguiente». Al terminar cada uno, márcalo como repasado y ve tu avance en la barra.</p>
+  <div class="legend" aria-label="Colores usados en el laboratorio">
+    <span><i class="dot" style="background:var(--a)"></i>Evento A · lo que me preguntan</span>
+    <span><i class="dot" style="background:var(--b)"></i>Evento B · lo que ya sé</span>
+    <span><i class="dot" style="background:var(--mul)"></i>Multiplicar</span>
+    <span><i class="dot" style="background:var(--sum)"></i>Sumar</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Secciones"><div class="scroller">
+  <a href="#enfoques">Enfoques y axiomas</a>
+  <a href="#guia">Guía de decisión rápida</a>
+  <a href="#adicion">Adición y complemento</a>
+  <a href="#condicional">Condicional</a>
+  <a href="#multiplicacion">Multiplicación</a>
+  <a href="#arbol">Árbol</a>
+  <a href="#total">Probabilidad total</a>
+  <a href="#bayes">Bayes</a>
+  <a href="#errores">Errores frecuentes</a>
+  <a href="#practica">Práctica</a>
+</div>
+  <div class="progress" aria-live="polite"><span id="progTxt">0 de 10 temas repasados</span><span class="bar"><i id="progBar"></i></span></div>
+</nav>
+
+<!-- 1. ENFOQUES Y AXIOMAS -->
+<section id="enfoques">
+  <div class="head"><span class="eyebrow">Sesión 5</span><h2>Enfoques y axiomas</h2>
+  <p>Hay tres maneras de asignar una probabilidad. Las tres cumplen los mismos tres axiomas, así que todas las reglas que siguen sirven para cualquiera.</p></div>
+  <div class="grid3">
+    <div class="panel"><h3>Clásico</h3><p>Resultados equiprobables. Casos favorables entre casos posibles (regla de Laplace).</p><div class="formula">P(As) = 4/52 = 1/13</div></div>
+    <div class="panel"><h3>Empírico</h3><p>Frecuencia relativa observada en datos reales.</p><div class="formula">P(venta) = 20/100 = 0.20</div></div>
+    <div class="panel"><h3>Subjetivo</h3><p>Juicio o experiencia cuando no hay datos ni equiprobabilidad. Siempre entre 0 y 1.</p><div class="formula">«70 % de que el proyecto llegue a tiempo»</div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel qcard" id="enfQuiz">
+      <span class="eyebrow">¿Qué enfoque es?</span>
+      <p class="phrase" id="enfPhrase"></p>
+      <div class="btns" id="enfBtns"></div>
+      <div id="enfFb" aria-live="polite"></div>
+      <div class="btns"><button class="btn" id="enfNext">Siguiente caso</button><span class="score" id="enfScore"></span></div>
+    </div>
+    <div class="panel">
+      <span class="eyebrow">Los tres axiomas</span>
+      <ol style="margin:0;padding-left:1.2em;display:grid;gap:6px">
+        <li>Toda probabilidad está entre 0 y 1: <span class="mono">0 ≤ P(A) ≤ 1</span></li>
+        <li>El espacio muestral completo vale 1: <span class="mono">P(S) = 1</span></li>
+        <li>Si A y B no pueden ocurrir juntos: <span class="mono">P(A ∪ B) = P(A) + P(B)</span></li>
+      </ol>
+      <p class="note">Prueba: escribe un valor y mira si puede ser una probabilidad.</p>
+      <div class="btns" style="align-items:center"><input type="number" id="axIn" step="0.01" value="1.2" aria-label="Valor de probabilidad"><span id="axOut" class="note"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. GUÍA -->
+<section id="guia">
+  <div class="head"><span class="eyebrow">Guía de decisión rápida</span><h2>¿Qué me pide el enunciado?</h2>
+  <p>Primero define A y B con palabras. Luego busca la palabra clave. Solo entonces elige la fórmula. Toca una palabra clave para ver su fila.</p></div>
+  <div class="btns" id="kwBtns"></div>
+  <div class="tablebox"><table class="guide" id="guideTable">
+    <thead><tr><th>¿Qué dice el enunciado?</th><th>Palabra clave</th><th>Operación · regla</th><th>Fórmula</th><th>Ejemplo de clase</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="callout">En P(A | B), lo que va después de la barra es el grupo sobre el que se calcula. Excluyentes e independientes no son lo mismo: dos eventos excluyentes con probabilidad positiva nunca son independientes.</div>
+  <div class="panel qcard">
+    <span class="eyebrow">Practica: ¿unión, intersección, condicional o complemento?</span>
+    <p class="phrase" id="clsPhrase"></p>
+    <div class="btns" id="clsBtns"></div>
+    <div id="clsFb" aria-live="polite"></div>
+    <div class="btns"><button class="btn" id="clsNext">Siguiente enunciado</button><span class="score" id="clsScore"></span></div>
+  </div>
+</section>
+
+<!-- 3. ADICIÓN Y COMPLEMENTO -->
+<section id="adicion">
+  <div class="head"><span class="eyebrow">Sesión 5 · Regla de la adición y del complemento</span><h2>Unión, intersección y complemento en el diagrama de Venn</h2>
+  <p>Ajusta P(A), P(B) y P(A ∩ B). Si sumas P(A) + P(B) sin restar la intersección, la parte común se cuenta dos veces.</p></div>
+  <div class="example"><span class="eyebrow">Ejemplo de clase</span><p>En una empresa, el 30 % de los empleados está interesado en Ventas (A), el 25 % en Marketing (B) y el 10 % en ambos. ¿Qué porcentaje está interesado en Ventas o Marketing? Los controles empiezan con estos datos: mira qué pasa si no restas el 10 %.</p></div>
+  <div class="grid2">
+    <div class="panel">
+      <label class="ctl"><span>P(A)</span><input type="range" id="vA" min="0" max="1" step="0.01" value="0.30"><output id="vAo"></output></label>
+      <label class="ctl"><span>P(B)</span><input type="range" id="vB" min="0" max="1" step="0.01" value="0.25"><output id="vBo"></output></label>
+      <label class="ctl"><span>P(A ∩ B)</span><input type="range" id="vI" min="0" max="1" step="0.01" value="0.10"><output id="vIo"></output></label>
+      <div class="btns"><button class="btn" id="vEx">Hacerlos excluyentes</button><button class="btn" id="vInd">Hacerlos independientes</button><button class="btn" id="vRst">Ejemplo Ventas / Marketing</button></div>
+      <span class="eyebrow">Sombrear</span>
+      <div class="btns" id="vMode"></div>
+    </div>
+    <div class="panel venn-panel">
+      <div class="svgbox"><svg id="venn" viewBox="0 0 420 250" role="img" aria-label="Diagrama de Venn de A y B"></svg></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="formula" id="vFormula" style="white-space:normal"></div>
+    <div id="vFacts"></div>
+  </div>
+  <div class="panel">
+    <div class="head"><span class="eyebrow">Regla del complemento</span><h3>«Al menos uno» = 1 − P(ninguno)</h3>
+    <p>Ejemplo: una empresa despacha 4 pedidos de forma independiente y cada uno llega tarde con probabilidad 0.10. Calcular «al menos uno tarde» directamente obliga a sumar muchos casos; por el complemento es una sola resta.</p>
+    <p class="note">n intentos independientes, cada uno con probabilidad p de que ocurra el evento (por ejemplo, que un pedido llegue tarde).</p></div>
+    <label class="ctl"><span>n (intentos)</span><input type="range" id="alN" min="1" max="12" step="1" value="4"><output id="alNo"></output></label>
+    <label class="ctl"><span>p (en cada uno)</span><input type="range" id="alP" min="0.01" max="0.5" step="0.01" value="0.10"><output id="alPo"></output></label>
+    <div class="svgbox"><svg id="alSvg" viewBox="0 0 1000 70" role="img" aria-label="Probabilidad de al menos uno"></svg></div>
+    <div class="formula" id="alF"></div>
+  </div>
+</section>
+
+<!-- 4. CONDICIONAL -->
+<section id="condicional">
+  <div class="head"><span class="eyebrow">Refuerzo · Probabilidad condicional</span><h2>«Dado que» reduce el mundo a B</h2>
+  <p>Elige <span class="ca">qué te preguntan (A)</span>, <span class="cb">qué ya sabes (B)</span> y la operación. La tabla marca en <span class="ca">azul el numerador</span> y en <span class="cb">naranja el total que divide</span>.</p></div>
+  <div class="example"><span class="eyebrow">Ejemplo de clase</span><p>80 estudiantes: se registra si participan en los foros virtuales y si aprobaron. En general aprueba el 75 % (60 de 80). Pero dado que un estudiante participa en foros, ¿cuál es la probabilidad de que apruebe? La tabla empieza con esa pregunta: A = aprobó, B = participa en foros.</p></div>
+  <div class="panel">
+    <div class="btns" id="ctData"></div>
+    <div class="grid2" style="gap:12px">
+      <label class="edit"><span class="eyebrow">¿Qué me preguntan? → A</span><select id="ctA"></select></label>
+      <label class="edit"><span class="eyebrow">¿Qué ya sé? → B</span><select id="ctB"></select></label>
+    </div>
+    <div class="btns" id="ctOp"></div>
+    <div class="tablebox"><table class="ct" id="ctTable"></table></div>
+    <div class="formula" id="ctF"></div>
+    <p id="ctTxt"></p>
+    <p id="ctInd" class="note"></p>
+  </div>
+  <div class="callout"><strong>Mismo numerador, distinto denominador:</strong> P(A | <span class="cb">B</span>) divide entre el total de <span class="cb">B</span> y P(B | <span class="ca">A</span>) divide entre el total de <span class="ca">A</span>. Por eso casi nunca dan igual.</div>
+</section>
+
+<!-- 5. MULTIPLICACIÓN -->
+<section id="multiplicacion">
+  <div class="head"><span class="eyebrow">Sesión 5 y refuerzo · Regla de la multiplicación</span><h2>De la condicional a la intersección</h2>
+  <p>Si despejas P(A ∩ B) de la fórmula condicional, obtienes P(A ∩ B) = P(B) · P(A | B). En el cuadrado, el ancho es P(B) y la altura dentro de B es P(A | B): el área sombreada es la intersección.</p></div>
+  <div class="example"><span class="eyebrow">Ejemplo de clase</span><p>Un servidor recibe tráfico inusual el 20 % de los días. Cuando hay tráfico inusual, se dispara una alerta el 65 % de las veces. ¿Qué probabilidad hay de que un día cualquiera haya tráfico inusual y se dispare la alerta? Como el dato viene condicionado («cuando hay tráfico…»), se usa <span class="cm">P(B) · P(A | B)</span>.</p></div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="btns" id="mPre"></div>
+      <label class="ctl"><span>P(B)</span><input type="range" id="mB" min="0" max="1" step="0.01" value="0.20"><output id="mBo"></output></label>
+      <label class="ctl"><span>P(A | B)</span><input type="range" id="mAB" min="0" max="1" step="0.01" value="0.65"><output id="mABo"></output></label>
+      <p id="mTxt" class="note"></p>
+      <div class="formula" id="mF"></div>
+      <p class="note">Si los eventos son independientes, P(A | B) = P(A) y la regla queda P(A ∩ B) = P(A) · P(B). Solo úsala si sabes que lo son.</p>
+    </div>
+    <div class="panel"><div class="svgbox"><svg id="mSvg" viewBox="0 0 320 320" role="img" aria-label="Modelo de área de la regla de la multiplicación"></svg></div></div>
+  </div>
+</section>
+
+<!-- 6. ÁRBOL -->
+<section id="arbol">
+  <div class="head"><span class="eyebrow">Sesión 8 · Diagrama de árbol</span><h2>El árbol y la probabilidad conjunta</h2>
+  <p>El árbol es la herramienta que se usa en las dos secciones siguientes, y se trabaja en tres momentos: aquí se dibuja y se <span class="cm">multiplican</span> las ramas; en <a href="#total">probabilidad total</a> se <span class="cs">suman</span> los caminos; y en <a href="#bayes">Bayes</a> se <span class="cn">divide</span>. El ejemplo que elijas aquí se mantiene en las tres secciones.</p></div>
+  <div class="panel">
+    <div class="btns" id="trPre"></div>
+    <div class="steps" id="trSteps">
+      <button class="step" data-s="0" aria-pressed="true"><b style="background:var(--muted)">0</b>Dibuja el árbol</button>
+      <button class="step" data-s="1" aria-pressed="false"><b>1</b>Multiplica las ramas</button>
+      <a class="step" href="#total" style="text-decoration:none"><b>2</b>Suma los caminos →</a>
+      <a class="step" href="#bayes" style="text-decoration:none"><b>3</b>Divide (Bayes) →</a>
+    </div>
+    <div id="tree" class="svgbox"></div>
+    <div id="treeL" class="tlist"></div>
+    <div class="treekey"></div>
+    <div id="trMsg" class="formula"></div>
+    <details>
+      <summary style="cursor:pointer">Cambiar los valores del árbol</summary>
+      <div class="edit" id="trEdit" style="margin-top:10px"></div>
+    </details>
+    <div>
+      <span class="eyebrow">Probabilidad conjunta</span>
+      <p class="note">Cada camino completo es una probabilidad conjunta: P(grupo ∩ resultado) = P(grupo) · P(resultado | grupo). En una tabla es la celda dividida entre el total general. No la confundas con la condicional: con 1000 envíos, 75 nacionales con retraso dan 75/1000 = 0.075 (conjunta) y 75/750 = 0.10 (condicional).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. TOTAL -->
+<section id="total">
+  <div class="head"><span class="eyebrow">Sesión 8</span><h2>Probabilidad total</h2>
+  <p>Ejemplo de clase: una fábrica compra piezas a tres proveedores. ¿Qué porcentaje del total de piezas sale defectuoso? Abajo está la regla y luego el ejemplo resuelto sobre su árbol, paso a paso. Puedes cambiar de ejemplo.</p></div>
+  <div class="panel card-total">
+    <div class="tablebox"><table>
+      <tbody>
+        <tr><th scope="row">¿Cuándo se usa?</th><td>Se pide la probabilidad de un resultado <span class="hl"><strong>en general</strong></span>, mezclando todos los grupos, sin saber de qué grupo es.</td></tr>
+        <tr><th scope="row">Palabras clave</th><td>«en total», «en general», «¿qué probabilidad hay de que…?» sin condición</td></tr>
+        <tr><th scope="row">Requisito</th><td>Los grupos forman una <strong>partición</strong>: son excluyentes, cubren todo y sus probabilidades suman 1.</td></tr>
+        <tr><th scope="row">Fórmula</th><td class="mono cs">P(A) = Σ P(A | Bᵢ) · P(Bᵢ)</td></tr>
+        <tr><th scope="row">¿Qué es cada letra?</th><td><span class="cb">Bᵢ</span> = cada uno de los grupos (B₁, B₂, B₃…); la <em>i</em> solo dice «el grupo número i». <span class="ca">A</span> = el resultado que se busca. Σ = sumar sobre todos los grupos.<br>Ejemplo de envíos: B₁ = I, B₂ = N, A = R → <span class="mono">P(R) = P(R|I)·P(I) + P(R|N)·P(N)</span></td></tr>
+        <tr><th scope="row">Pasos</th><td>1 · Dibuja el árbol. 2 · <span class="cm">Multiplica</span> las ramas de cada camino. 3 · <span class="cs">Suma</span> los caminos que llegan a A.</td></tr>
+      </tbody>
+    </table></div>
+    <span class="eyebrow">Ejemplo resuelto · el árbol ahora suma los caminos</span>
+    <div class="btns presets"></div>
+    <div id="treeTot" class="svgbox"></div>
+    <div id="treeTotL" class="tlist"></div>
+    <div class="treekey"></div>
+    <ol class="walk walk-total" id="totWalk"></ol>
+    <div class="formula" id="totF" hidden></div>
+  </div>
+</section>
+
+<!-- 8. BAYES -->
+<section id="bayes">
+  <div class="head"><span class="eyebrow">Sesión 8</span><h2>Teorema de Bayes</h2>
+  <p>Ejemplo de clase: tomamos una pieza y descubrimos que está defectuosa. ¿De qué proveedor es más probable que venga? Primero la regla, luego el ejemplo resuelto sobre su árbol.</p></div>
+  <div class="panel card-bayes">
+    <div class="tablebox"><table>
+      <tbody>
+        <tr><th scope="row">¿Cuándo se usa?</th><td>Ya se <span class="hl"><strong>conoce el resultado</strong></span> y se pregunta de qué <span class="hl"><strong>grupo</strong></span> proviene. Es la probabilidad total al revés.</td></tr>
+        <tr><th scope="row">Palabras clave</th><td>«dado que…», «si se sabe que…», «si resultó…, ¿de dónde vino?»</td></tr>
+        <tr><th scope="row">Fórmula</th><td class="mono cn">P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)</td></tr>
+        <tr><th scope="row">¿Qué es cada letra?</th><td><span class="cb">Bᵢ</span> = el grupo por el que te preguntan (uno de B₁, B₂, B₃…). <span class="ca">A</span> = el resultado que ya ocurrió. P(A) = la probabilidad total, que va abajo.<br>Ejemplo de envíos: si llegó con retraso, ¿fue internacional? Bᵢ = I, A = R → <span class="mono">P(I|R) = P(R|I)·P(I) / P(R) = (0.40)(0.25) / 0.175 = 0.5714</span></td></tr>
+        <tr><th scope="row">Pasos</th><td>1 · Árbol. 2 · <span class="cm">Multiplica</span> las ramas. 3 · Calcula P(A) <span class="cs">sumando</span> los caminos. 4 · <span class="cn">Divide</span> el camino del grupo que interesa entre P(A).</td></tr>
+        <tr><th scope="row">Cuidado</th><td>P(A | Bᵢ) y P(Bᵢ | A) no son lo mismo. En los envíos, P(R | I) = 0.40, pero P(I | R) = 0.5714.</td></tr>
+      </tbody>
+    </table></div>
+    <span class="eyebrow">Ejemplo resuelto · el árbol ahora divide</span>
+    <div class="btns presets"></div>
+    <label class="edit"><span class="eyebrow">¿De qué grupo quieres saber si vino?</span><select id="byG"></select></label>
+    <div id="treeBay" class="svgbox"></div>
+    <div id="treeBayL" class="tlist"></div>
+    <div class="treekey"></div>
+    <ol class="walk walk-bayes" id="byWalk"></ol>
+    <div class="formula" id="byF" hidden></div>
+    <p id="byTxt"></p>
+    <div class="tablebox"><table id="byTable"></table></div>
+  </div>
+</section>
+
+<!-- 9. ERRORES -->
+<section id="errores">
+  <div class="head"><span class="eyebrow">Refuerzo · Cierre</span><h2>Errores frecuentes</h2></div>
+  <div class="grid3">
+    <div class="err"><strong>Confundir unión con intersección</strong><span>«o» suma (restando si se solapan); «y» multiplica. Subraya la palabra clave antes de calcular.</span></div>
+    <div class="err"><strong>Sumar cuando hay que multiplicar</strong><span>Si piden «A y B», la respuesta nunca sale sumando probabilidades.</span></div>
+    <div class="err"><strong>Confundir P(A | B) con P(B | A)</strong><span>¿Qué me preguntan (A) y qué ya sé (B)? El orden en la barra no se puede intercambiar.</span></div>
+    <div class="err"><strong>Usar el total equivocado</strong><span>En P(A | B) el denominador es el total de B, no el total general ni el total de A.</span></div>
+    <div class="err"><strong>Asumir independencia sin comprobarla</strong><span>Antes de usar P(A) · P(B), verifica si P(A | B) = P(A).</span></div>
+    <div class="err"><strong>No definir A y B por escrito</strong><span>Escribir «A = …», «B = …» antes de la fórmula evita la mayoría de los errores.</span></div>
+  </div>
+</section>
+
+<!-- 10. PRÁCTICA -->
+<section id="practica">
+  <div class="head"><span class="eyebrow">Práctica</span><h2>Ponte a prueba</h2>
+  <p>26 ejercicios basados en los ejemplos de clase, organizados por tema. Elige una respuesta y revisa la explicación.</p></div>
+  <div class="btns" id="quizTopics"></div>
+  <div class="quiz" id="quiz"></div>
+  <p class="score" id="quizScore"></p>
+</section>
+
+<footer>Construido a partir de las sesiones de Estadística Inferencial: Enfoques, axiomas y reglas de la probabilidad · Refuerzo de probabilidad condicional · Probabilidad total y teorema de Bayes. Resultados con 4 decimales.</footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const SKEY='labprob-v1';
+let ST={done:[],quiz:{}};
+try{const raw=localStorage.getItem(SKEY);if(raw){const o=JSON.parse(raw);ST.done=Array.isArray(o.done)?o.done:[];ST.quiz=o.quiz&&typeof o.quiz==='object'?o.quiz:{}}}catch(e){}
+function saveST(){try{localStorage.setItem(SKEY,JSON.stringify(ST))}catch(e){}}
+const f4 = x => (Math.round(x*10000)/10000).toFixed(4);
+const boldF = s => s.replace(/^(.*?)( = \d)/, '<b class="fx">$1</b>$2');
+const f2 = x => x.toFixed(2);
+const pct = x => (x*100).toFixed(2)+' %';
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs={}, parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(parent,x,y,s,attrs={}){const t=el('text',Object.assign({x,y},attrs),parent);t.textContent=s;return t}
+function shuffle(a){return a.map(v=>[Math.random(),v]).sort((p,q)=>p[0]-q[0]).map(p=>p[1])}
+
+/* ---------- Clasificador genérico ---------- */
+function classifier({items, options, phraseEl, btnsEl, fbEl, nextEl, scoreEl}){
+  let order=shuffle(items.slice()), i=0, ok=0, done=0, answered=false;
+  function show(){
+    const it=order[i%order.length]; answered=false;
+    $(phraseEl).textContent=it.q; $(fbEl).innerHTML='';
+    const b=$(btnsEl); b.innerHTML='';
+    options.forEach(o=>{const x=document.createElement('button');x.className='btn';x.textContent=o;x.onclick=()=>pick(o,it);b.appendChild(x)});
+    $(scoreEl).textContent=done?`${ok} de ${done} correctas`:'';
+  }
+  function pick(o,it){
+    if(answered)return; answered=true; done++;
+    const ans=Array.isArray(it.a)?it.a:[it.a];
+    const good=ans.includes(o); if(good)ok++;
+    $(btnsEl).querySelectorAll('button').forEach(x=>{if(ans.includes(x.textContent))x.setAttribute('aria-pressed','true')});
+    $(fbEl).innerHTML=`<div class="fb ${good?'ok':'no'}"><strong>${good?'Correcto.':'Es '+ans.map(a=>a.toLowerCase()).join(' o ')+'.'}</strong> ${it.why}</div>`;
+    $(scoreEl).textContent=`${ok} de ${done} correctas`;
+  }
+  $(nextEl).onclick=()=>{i++;show()};
+  show();
+}
+
+/* ---------- 1. Enfoques ---------- */
+classifier({
+  items:[
+    {q:'Un dado equilibrado: ¿probabilidad de que salga número par?',a:'Clásico',why:'Los 6 resultados son equiprobables: 3/6 = 0.5.'},
+    {q:'De 100 transacciones registradas, 20 fueron ventas exitosas.',a:'Empírico',why:'Se usa la frecuencia observada: 20/100 = 0.20.'},
+    {q:'«El 92 % de nuestros pedidos llega a tiempo, según 50 000 entregas registradas».',a:'Empírico',why:'La probabilidad sale de datos observados, no de resultados equiprobables.'},
+    {q:'Un gerente estima en 70 % la probabilidad de que el proyecto termine a tiempo.',a:'Subjetivo',why:'No hay datos ni equiprobabilidad: es un juicio basado en experiencia.'},
+    {q:'Sacar un as de una baraja de 52 cartas.',a:'Clásico',why:'Todas las cartas tienen la misma probabilidad: 4/52 = 1/13.'},
+    {q:'Una analista cree que hay 40 % de probabilidad de que suba la tasa de cambio el próximo mes.',a:'Subjetivo',why:'Es una opinión informada, no una frecuencia ni un conteo de casos equiprobables.'},
+  ],
+  options:['Clásico','Empírico','Subjetivo'],
+  phraseEl:'#enfPhrase',btnsEl:'#enfBtns',fbEl:'#enfFb',nextEl:'#enfNext',scoreEl:'#enfScore'
+});
+function axCheck(){
+  const v=parseFloat($('#axIn').value);
+  let m;
+  if(isNaN(v)) m='Escribe un número.';
+  else if(v<0) m=`${v} no puede ser una probabilidad: rompe el axioma 1 (no hay probabilidades negativas).`;
+  else if(v>1) m=`${v} no puede ser una probabilidad: rompe el axioma 1 (ninguna probabilidad pasa de 1).`;
+  else if(v===1) m='Sí: 1 es la probabilidad de un evento seguro, como P(S).';
+  else if(v===0) m='Sí: 0 es la probabilidad de un evento imposible.';
+  else m=`Sí: ${v} está entre 0 y 1. Su complemento es ${f4(1-v)}.`;
+  $('#axOut').textContent=m;
+}
+$('#axIn').addEventListener('input',axCheck); axCheck();
+
+/* ---------- 2. Guía ---------- */
+const GUIDE=[
+  {k:['o'],c:'Uno <strong>o</strong> el otro (o ambos)',w:'«o», «uno u otro», «cualquiera de los dos»',r:'<strong class="cs">Unión</strong> · regla de la adición',f:'P(A ∪ B) = P(A) + P(B) − P(A ∩ B)',e:'Ventas o Marketing: 0.30 + 0.25 − 0.10 = 0.45'},
+  {k:['no'],c:'Que <strong>no</strong> ocurra',w:'«no», «falla»',r:'<strong class="cb">Complemento</strong>',f:'P(Aᶜ) = 1 − P(A)',e:'Pieza no defectuosa: 1 − 0.03 = 0.97'},
+  {k:['al menos uno'],c:'<strong>Al menos uno</strong> de varios',w:'«al menos uno», «por lo menos uno»',r:'Es una <strong class="cs">unión</strong> de varios eventos, pero se calcula con el <strong class="cb">complemento</strong>',f:'1 − P(ninguno)',e:'Al menos uno de 3 pedidos tarde (p = 0.10): 1 − 0.90³ = 0.271'},
+  {k:['y','independientes'],c:'Uno <strong>y</strong> otro, eventos independientes',w:'«y» + «de forma independiente»',r:'<strong class="cm">Intersección</strong> · multiplicación',f:'P(A ∩ B) = P(A) · P(B)',e:'Tres seis en tres dados: (1/6)(1/6)(1/6) = 1/216'},
+  {k:['y','de los que'],c:'Uno <strong>y</strong> otro, con el dato condicionado',w:'«y» + «de los que…, el x %»',r:'<strong class="cm">Intersección</strong> · multiplicación',f:'P(A ∩ B) = P(B) · P(A | B)',e:'Tráfico inusual y alerta: 0.20 × 0.65 = 0.13'},
+  {k:['dado que'],c:'Restringido a un caso que ya ocurrió',w:'«dado que», «sabiendo que»',r:'<strong class="ca">Condicional</strong>',f:'P(A | B) = P(A ∩ B) / P(B)',e:'Aprueba dado que participa en foros: 42/50 = 0.84'},
+  {k:['excluyentes'],c:'¿Pueden ocurrir juntos?',w:'«excluyentes», «no pueden ocurrir a la vez»',r:'<strong>Excluyentes</strong>',f:'P(A ∩ B) = 0',e:'Número par e impar en un dado: P(par ∩ impar) = 0'},
+  {k:['independientes'],c:'¿Uno afecta al otro?',w:'«independientes»',r:'<strong>Prueba de independencia</strong>',f:'¿P(A | B) = P(A)?',e:'Foros y aprobación: 0.84 ≠ 0.75 → dependientes'},
+];
+const gt=$('#guideTable tbody');
+GUIDE.forEach(g=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${g.c}</td><td>${g.w}</td><td>${g.r}</td><td>${g.f}</td><td>${g.e}</td>`;gt.appendChild(tr);g.tr=tr});
+const KW=['o','y','no','al menos uno','dado que','de los que','excluyentes','independientes'];
+let kwSel=null;
+KW.forEach(k=>{const b=document.createElement('button');b.className='btn';b.textContent='«'+k+'»';b.setAttribute('aria-pressed','false');
+  b.onclick=()=>{kwSel=kwSel===k?null:k;document.querySelectorAll('#kwBtns .btn').forEach(x=>x.setAttribute('aria-pressed',String(x===b&&kwSel===k)));GUIDE.forEach(g=>g.tr.classList.toggle('hit',kwSel!==null&&g.k.includes(kwSel)))};
+  $('#kwBtns').appendChild(b)});
+classifier({
+  items:[
+    {q:'Probabilidad de que un estudiante trabaje o tenga beca.',a:'Unión',why:'La palabra clave es «o»: ocurre al menos uno de los dos. Se usa la regla de la adición.'},
+    {q:'Probabilidad de que una pieza no sea defectuosa.',a:'Complemento',why:'«No» pide lo contrario: 1 − P(defectuosa).'},
+    {q:'Si el cliente pagó con tarjeta, probabilidad de que sea cliente nuevo.',a:'Condicional',why:'Ya se sabe que pagó con tarjeta (B). El mundo se reduce a los que pagaron con tarjeta.'},
+    {q:'Probabilidad de que un empleado hable inglés y tenga posgrado.',a:'Intersección',why:'«Y» pide que ocurran ambos a la vez.'},
+    {q:'Probabilidad de que al menos uno de tres vuelos se retrase.',a:['Complemento','Unión'],why:'Valen las dos. «Al menos uno» es la unión de los tres eventos: se retrasa el 1.º o el 2.º o el 3.º. Pero sumar y restar intersecciones de tres eventos es largo, así que se calcula por el complemento: 1 − P(ninguno se retrasa).'},
+    {q:'Sabiendo que sonó la alerta, probabilidad de que sea fraude.',a:'Condicional',why:'«Sabiendo que» indica la condición. Como la condición es el resultado y se pregunta por el grupo, se resuelve con Bayes.'},
+    {q:'Probabilidad de que un envío sea internacional y llegue con retraso.',a:'Intersección',why:'Ambas cosas a la vez. Como el retraso depende del tipo de envío: P(I) · P(R | I).'},
+    {q:'Probabilidad de que un cliente compre en línea o en tienda física.',a:'Unión',why:'«O»: al menos uno de los dos canales. Resta la intersección si hay clientes que compran en ambos.'},
+    {q:'Dado que un estudiante participa en foros, probabilidad de que apruebe.',a:'Condicional',why:'«Dado que» reduce el grupo a los que participan en foros: 42/50 = 0.84.'},
+    {q:'Probabilidad de que un cliente pague con tarjeta y además use la banca en línea.',a:'Intersección',why:'«Y además» pide que ocurran las dos cosas a la vez: intersección. Se calcula con la regla de la multiplicación.'},
+  ],
+  options:['Unión','Intersección','Condicional','Complemento'],
+  phraseEl:'#clsPhrase',btnsEl:'#clsBtns',fbEl:'#clsFb',nextEl:'#clsNext',scoreEl:'#clsScore'
+});
+
+/* ---------- 3. Venn ---------- */
+const V={A:.30,B:.25,I:.10,mode:'union'};
+const MODES=[['union','A ∪ B (o)'],['inter','A ∩ B (y)'],['notA','Aᶜ (no A)'],['none','Ninguno'],['onlyA','Solo A'],['cond','A | B (dado B)']];
+MODES.forEach(([m,l])=>{const b=document.createElement('button');b.className='btn';b.textContent=l;b.dataset.m=m;b.onclick=()=>{V.mode=m;drawVenn()};$('#vMode').appendChild(b)});
+function clampV(src){
+  V.A=+$('#vA').value; V.B=+$('#vB').value; V.I=+$('#vI').value;
+  const lo=Math.max(0,V.A+V.B-1), hi=Math.min(V.A,V.B);
+  if(V.I>hi)V.I=hi; if(V.I<lo)V.I=lo;
+  V.I=Math.round(V.I*100)/100; $('#vI').value=V.I;
+}
+['vA','vB','vI'].forEach(id=>$('#'+id).addEventListener('input',()=>{clampV();drawVenn()}));
+$('#vEx').onclick=()=>{$('#vI').value=0;clampV();drawVenn()};
+$('#vInd').onclick=()=>{$('#vI').value=(Math.round(V.A*V.B*100)/100);clampV();V.I=V.A*V.B;drawVenn(true)};
+$('#vRst').onclick=()=>{$('#vA').value=.30;$('#vB').value=.25;$('#vI').value=.10;clampV();drawVenn()};
+function drawVenn(exactInd){
+  const s=$('#venn'); s.innerHTML='';
+  document.querySelectorAll('#vMode .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===V.mode)));
+  $('#vAo').textContent=f2(V.A); $('#vBo').textContent=f2(V.B); $('#vIo').textContent=f2(+$('#vI').value);
+  const W=420,H=250, rA=18+78*Math.sqrt(V.A), rB=18+78*Math.sqrt(V.B);
+  const mn=Math.min(V.A,V.B), t=mn>0?V.I/mn:0;
+  const dSep=rA+rB+10, dIn=Math.abs(rA-rB)+4, d=dSep+(dIn-dSep)*t;
+  const cx=W/2, cy=128, ax=cx-d/2, bx=cx+d/2;
+  const defs=el('defs',{},s);
+  const mk=(id,inv,x,r)=>{const m=el('mask',{id},defs);el('rect',{x:0,y:0,width:W,height:H,fill:inv?'white':'black'},m);el('circle',{cx:x,cy,r,fill:inv?'black':'white'},m)};
+  mk('vmA',false,ax,rA); mk('vmB',false,bx,rB); mk('vmNA',true,ax,rA); mk('vmNB',true,bx,rB);
+  el('rect',{x:10,y:24,width:W-20,height:H-34,rx:8,fill:'none',stroke:'var(--line)','stroke-width':1.5},s);
+  txt(s,20,18,'S (todo el espacio muestral) · P(S) = 1',{class:'lbl mut'});
+  const sh=el('g',{opacity:.55},s); const fillA='var(--a)', fillB='var(--b)';
+  if(V.mode==='union'){el('circle',{cx:ax,cy,r:rA,fill:'var(--a)'},sh);el('circle',{cx:bx,cy,r:rB,fill:'var(--a)'},sh)}
+  if(V.mode==='inter'){el('circle',{cx:bx,cy,r:rB,fill:'var(--a)',mask:'url(#vmA)'},sh)}
+  if(V.mode==='notA'){el('rect',{x:11,y:25,width:W-22,height:H-36,fill:'var(--a)',mask:'url(#vmNA)'},sh)}
+  if(V.mode==='none'){const g=el('g',{mask:'url(#vmNB)'},sh);el('rect',{x:11,y:25,width:W-22,height:H-36,fill:'var(--a)',mask:'url(#vmNA)'},g)}
+  if(V.mode==='onlyA'){el('circle',{cx:ax,cy,r:rA,fill:'var(--a)',mask:'url(#vmNB)'},sh)}
+  if(V.mode==='cond'){el('circle',{cx:bx,cy,r:rB,fill:'var(--b)',opacity:.45},sh);el('circle',{cx:bx,cy,r:rB,fill:'var(--a)',mask:'url(#vmA)'},sh)}
+  el('circle',{cx:ax,cy,r:rA,fill:'none',stroke:'var(--a)','stroke-width':2.5},s);
+  el('circle',{cx:bx,cy,r:rB,fill:'none',stroke:'var(--b)','stroke-width':V.mode==='cond'?4:2.5},s);
+  txt(s,Math.max(16,ax-rA*0.7),Math.max(40,cy-rA-8),'A · P(A) = '+f2(V.A),{class:'lbl','font-weight':'700',fill:'var(--a)','text-anchor':'middle'});
+  txt(s,Math.min(W-16,bx+rB*0.7),Math.max(40,cy-rB-8),'B · P(B) = '+f2(V.B),{class:'lbl','font-weight':'700',fill:'var(--b)','text-anchor':'middle'});
+  const I=V.I, oA=V.A-I, oB=V.B-I, none=1-(V.A+V.B-I);
+  const lA=Math.max(ax-rA+16, 26), lB=Math.min(bx+rB-16, W-26);
+  const xA=(I>0?Math.min(ax-rA*0.35,(ax-rA+bx-rB)/2):ax), xB=(I>0?Math.max(bx+rB*0.35,(ax+rA+bx+rB)/2):bx), xI=(Math.max(ax,bx-rB)+Math.min(bx,ax+rA))/2;
+  if(oA>0.0001){txt(s,xA,cy+2,f2(oA),{class:'lbl mono','text-anchor':'middle'});txt(s,xA,cy+18,'solo A',{class:'lbl mut','text-anchor':'middle',style:'font-size:10px'})}
+  if(oB>0.0001){txt(s,xB,cy+2,f2(oB),{class:'lbl mono','text-anchor':'middle'});txt(s,xB,cy+18,'solo B',{class:'lbl mut','text-anchor':'middle',style:'font-size:10px'})}
+  if(I>0.0001){txt(s,xI,cy+2,f2(I),{class:'lbl mono','text-anchor':'middle','font-weight':'700'});txt(s,xI,cy+18,'ambos',{class:'lbl mut','text-anchor':'middle',style:'font-size:10px'})}
+  txt(s,W-20,H-16,'ninguno: '+f2(Math.max(0,none)),{class:'lbl mono mut','text-anchor':'end'});
+  const U=V.A+V.B-I;
+  const nn=Math.max(0,1-U);
+  const F={
+    union:[`P(A ∪ B) = P(A) + P(B) − P(A ∩ B) = ${f2(V.A)} + ${f2(V.B)} − ${f2(I)} = ${f4(U)}`,`En el gráfico: solo A + ambos + solo B = ${f2(oA)} + ${f2(I)} + ${f2(oB)} = ${f2(U)}`],
+    inter:[`P(A ∩ B) = ${f4(I)}`,`En el gráfico: la zona «ambos», donde se cruzan los círculos`],
+    notA:[`P(Aᶜ) = 1 − P(A) = 1 − ${f2(V.A)} = ${f4(1-V.A)}`,`En el gráfico: todo lo que está fuera del círculo A = solo B + ninguno = ${f2(oB)} + ${f2(nn)} = ${f2(1-V.A)}`],
+    none:[`P(ninguno) = 1 − P(A ∪ B) = 1 − ${f4(U)} = ${f4(nn)}`,`En el gráfico: lo que está fuera de los dos círculos`],
+    onlyA:[`P(solo A) = P(A) − P(A ∩ B) = ${f2(V.A)} − ${f2(I)} = ${f4(oA)}`,`En el gráfico: la parte de A que no toca a B`],
+    cond:V.B>0?[`P(A | B) = P(A ∩ B) / P(B) = ${f2(I)} / ${f2(V.B)} = ${f4(I/V.B)}`,`En el gráfico: el mundo se reduce al círculo B; de ese círculo, la zona «ambos» es ${f2(I)} de ${f2(V.B)}`]:['P(B) = 0: la condicional no está definida.','']
+  };
+  $('#vFormula').innerHTML=`<div>${boldF(F[V.mode][0])}</div>${F[V.mode][1]?`<div class="note" style="white-space:normal;margin-top:4px">${F[V.mode][1]}</div>`:''}`;
+  const exc=I<0.00001, ind=Math.abs(I-V.A*V.B)<0.00051;
+  const row=(t,v,d)=>`<div class="fact"><div class="fact-t">${t}</div><div class="fact-v">${v}</div><div class="fact-d">${d}</div></div>`;
+  let facts=row('Cada círculo completo',`P(A) = ${f2(V.A)} · P(B) = ${f2(V.B)}`,`A = solo A + ambos = ${f2(oA)} + ${f2(I)}<br>B = solo B + ambos = ${f2(oB)} + ${f2(I)}`);
+  facts+=row('¿Excluyentes?',exc?'Sí':'No',exc?'P(A ∩ B) = 0: los círculos no se tocan.':`P(A ∩ B) = ${f2(I)} ≠ 0: los círculos se cruzan.`);
+  facts+=row('¿Independientes?',ind?'Sí':'No',`P(A)·P(B) = ${f2(V.A)} × ${f2(V.B)} = ${f4(V.A*V.B)} ${ind?'=':'≠'} P(A ∩ B) = ${f4(I)}`+(V.B>0?`<br>P(A | B) = ${f2(I)} / ${f2(V.B)} = ${f4(I/V.B)} ${ind?'=':'≠'} P(A) = ${f2(V.A)}`:'')+`<br>${ind?'Saber B no cambia la probabilidad de A.':'Saber B cambia la probabilidad de A.'}`+((exc&&V.A>0&&V.B>0)?'<br>Al ser excluyentes con probabilidad positiva, no pueden ser independientes.':''));
+  $('#vFacts').innerHTML=facts;
+}
+clampV(); drawVenn();
+
+/* "al menos uno" */
+function drawAL(){
+  const n=+$('#alN').value,p=+$('#alP').value,q=Math.pow(1-p,n),r=1-q;
+  $('#alNo').textContent=n; $('#alPo').textContent=f2(p);
+  const s=$('#alSvg'); s.innerHTML=''; const W=1000;
+  el('rect',{x:0,y:18,width:W,height:26,rx:4,fill:'var(--soft)'},s);
+  el('rect',{x:0,y:18,width:W*r,height:26,rx:4,fill:'var(--a)'},s);
+  txt(s,0,12,'al menos uno: '+f4(r),{class:'lbl','font-weight':'600',fill:'var(--a)'});
+  txt(s,W,62,'ninguno: '+f4(q),{class:'lbl mut','text-anchor':'end'});
+  $('#alF').innerHTML=`<span class="cb">1 · Complemento de uno solo:</span> P(no ocurra en un intento) = 1 − ${f2(p)} = ${f2(1-p)}<br><span class="cm">2 · Ninguno (multiplica, son independientes):</span> P(ninguno) = ${Array(n).fill(f2(1-p)).join(' × ')} = ${f2(1-p)}<sup>${n}</sup> = ${f4(q)}<br><span class="ca">3 · Complemento de «ninguno»:</span> P(al menos uno) = 1 − ${f4(q)} = <strong class="ca">${f4(r)}</strong>`;
+}
+['alN','alP'].forEach(id=>$('#'+id).addEventListener('input',drawAL)); drawAL();
+
+/* ---------- 4. Tabla de contingencia ---------- */
+const DATA={
+  foros:{name:'Foros y aprobación (80 estudiantes)',rows:['Participa en foros','No participa'],cols:['Aprobó','No aprobó'],m:[[42,8],[18,12]],defA:'c0',defB:'r0'},
+  calidad:{name:'Control de calidad (100 piezas)',rows:['Línea 1','Línea 2'],cols:['Cumple','No cumple'],m:[[48,12],[22,18]],defA:'c0',defB:'r0'},
+  sucursal:{name:'Sucursales (100 productos)',rows:['Norte','Sur'],cols:['Cumple calidad','No cumple'],m:[[54,6],[30,10]],defA:'c1',defB:'r0'},
+};
+const CT={d:'foros',A:'c0',B:'r0',op:'cond'};
+const OPS=[['simple','P(A)'],['inter','P(A ∩ B) · «y»'],['union','P(A ∪ B) · «o»'],['cond','P(A | B) · «dado que»']];
+Object.entries(DATA).forEach(([k,d])=>{const b=document.createElement('button');b.className='btn';b.textContent=d.name;b.dataset.k=k;b.onclick=()=>{CT.d=k;CT.A=d.defA;CT.B=d.defB;fillCtSel();drawCT()};$('#ctData').appendChild(b)});
+OPS.forEach(([k,l])=>{const b=document.createElement('button');b.className='btn';b.textContent=l;b.dataset.k=k;b.onclick=()=>{CT.op=k;drawCT()};$('#ctOp').appendChild(b)});
+function evs(d){return [['r0',d.rows[0]],['r1',d.rows[1]],['c0',d.cols[0]],['c1',d.cols[1]]]}
+function fillCtSel(){const d=DATA[CT.d];['A','B'].forEach(w=>{const s=$('#ct'+w);s.innerHTML='';evs(d).forEach(([k,l])=>{const o=document.createElement('option');o.value=k;o.textContent=l;s.appendChild(o)});s.value=CT[w]})}
+$('#ctA').onchange=e=>{CT.A=e.target.value;drawCT()}; $('#ctB').onchange=e=>{CT.B=e.target.value;drawCT()};
+function cells(k){const r=[];for(let i=0;i<2;i++)for(let j=0;j<2;j++){if((k[0]==='r'&&+k[1]===i)||(k[0]==='c'&&+k[1]===j))r.push(i+','+j)}return r}
+function lab(d,k){return evs(d).find(e=>e[0]===k)[1]}
+function drawCT(){
+  const d=DATA[CT.d], m=d.m, N=m[0][0]+m[0][1]+m[1][0]+m[1][1];
+  document.querySelectorAll('#ctData .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===CT.d)));
+  document.querySelectorAll('#ctOp .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===CT.op)));
+  $('#ctB').disabled=CT.op==='simple';
+  const SA=new Set(cells(CT.A)), SB=new Set(cells(CT.B));
+  const sum=set=>[...set].reduce((a,c)=>{const[i,j]=c.split(',').map(Number);return a+m[i][j]},0);
+  let num=new Set(), den=null, F='', T='';
+  const nA=lab(d,CT.A), nB=lab(d,CT.B);
+  const inter=new Set([...SA].filter(c=>SB.has(c))), uni=new Set([...SA,...SB]);
+  if(CT.op==='simple'){num=SA;const v=sum(SA);F=`P(A) = ${v} / ${N} = ${f4(v/N)}`;T=`De todos (${N}), el ${pct(v/N)} está en «${nA}».`}
+  if(CT.op==='inter'){num=inter;const v=sum(inter);F=`P(A ∩ B) = ${v} / ${N} = ${f4(v/N)}`;T=v?`De todos (${N}), el ${pct(v/N)} está a la vez en «${nA}» y en «${nB}».`:`«${nA}» y «${nB}» no pueden ocurrir a la vez: son excluyentes.`}
+  if(CT.op==='union'){num=uni;const a=sum(SA),b=sum(SB),i=sum(inter),v=sum(uni);F=`P(A ∪ B) = P(A) + P(B) − P(A ∩ B) = ${a}/${N} + ${b}/${N} − ${i}/${N} = ${f4(a/N)} + ${f4(b/N)} − ${f4(i/N)} = ${f4(v/N)}`;T=`De todos (${N}), el ${pct(v/N)} está en «${nA}» o en «${nB}» (o en ambos). P(A) = ${a}/${N} es el total de «${nA}», P(B) = ${b}/${N} es el total de «${nB}» y se resta P(A ∩ B) = ${i}/${N} porque esos casos están en los dos totales. Comprobación con las celdas marcadas: ${v}/${N} = ${f4(v/N)}.`}
+  if(CT.op==='cond'){num=inter;den=SB;const v=sum(inter),b=sum(SB);F=`P(A | B) = P(A ∩ B) / P(B) = ${v} / ${b} = ${f4(v/b)}`;T=`De los ${b} casos «${nB}», el ${pct(v/b)} son «${nA}». El total que divide ya no es ${N}: es solo B.`}
+  const tb=$('#ctTable'); const r0=m[0][0]+m[0][1], r1=m[1][0]+m[1][1], c0=m[0][0]+m[1][0], c1=m[0][1]+m[1][1];
+  const td=(i,j)=>{const k=i+','+j;const cls=[num.has(k)?'num':'',den&&den.has(k)?'den':''].join(' ');return `<td class="${cls}">${m[i][j]}</td>`};
+  tb.innerHTML=`<thead><tr><th></th><th>${d.cols[0]}</th><th>${d.cols[1]}</th><th>Total</th></tr></thead><tbody>
+  <tr><th>${d.rows[0]}</th>${td(0,0)}${td(0,1)}<td class="tot">${r0}</td></tr>
+  <tr><th>${d.rows[1]}</th>${td(1,0)}${td(1,1)}<td class="tot">${r1}</td></tr>
+  <tr><th>Total</th><td class="tot">${c0}</td><td class="tot">${c1}</td><td class="tot">${N}</td></tr></tbody>`;
+  $('#ctF').innerHTML=boldF(F); $('#ctTxt').innerHTML=T.replace(new RegExp('«'+nA.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'»','g'),'<span class="ca">«'+nA+'»</span>').replace(new RegExp('«'+nB.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'»','g'),'<span class="cb">«'+nB+'»</span>');
+  if(CT.op==='cond'&&CT.A!==CT.B){const pa=sum(SA)/N,pab=sum(inter)/sum(SB);const same=Math.abs(pa-pab)<0.00005;
+    $('#ctInd').innerHTML=`<strong>Prueba de independencia:</strong> compara P(A | B) = ${sum(inter)}/${sum(SB)} = ${f4(pab)} con P(A) = ${sum(SA)}/${N} = ${f4(pa)} (la probabilidad de A mirando a todos). Como ${f4(pab)} ${same?'=':'≠'} ${f4(pa)}: ${same?'Saber B no cambia la probabilidad de A: <span class="cs">son independientes</span>.':'Saber B cambia la probabilidad de A: <span class="cm">son dependientes</span>.'}`}
+  else $('#ctInd').innerHTML='';
+}
+fillCtSel(); drawCT();
+
+/* ---------- 5. Multiplicación (modelo de área) ---------- */
+const MPRE=[['Servidor y alerta',.20,.65,'B = hay tráfico inusual · A = se dispara la alerta'],['Tarjeta y banca en línea',.30,.40,'B = tiene tarjeta · A = usa banca en línea']];
+let mInfo=MPRE[0][3];
+let mSel=0;
+MPRE.forEach(([n,b,ab,info],k)=>{const x=document.createElement('button');x.className='btn';x.textContent=n;x.dataset.k=k;x.onclick=()=>{$('#mB').value=b;$('#mAB').value=ab;mInfo=info;mSel=k;drawM()};$('#mPre').appendChild(x)});
+function drawM(){
+  const b=+$('#mB').value, ab=+$('#mAB').value, v=b*ab;
+  $('#mBo').textContent=f2(b); $('#mABo').textContent=f2(ab);
+  const s=$('#mSvg'); s.innerHTML=''; const X=40,Y=20,S=260;
+  el('rect',{x:X,y:Y,width:S,height:S,fill:'var(--soft)',stroke:'var(--line)'},s);
+  el('rect',{x:X,y:Y,width:S*b,height:S,fill:'var(--b-soft)',stroke:'var(--b)','stroke-width':2},s);
+  el('rect',{x:X,y:Y+S*(1-ab),width:S*b,height:S*ab,fill:'var(--a)',opacity:.75},s);
+  txt(s,X+S*b/2,Y+S+18,'P(B) = '+f2(b),{class:'lbl','text-anchor':'middle',fill:'var(--b)'});
+  const ly=Y+S*(1-ab/2);
+  txt(s,X-6,ly,f2(ab),{class:'lbl','text-anchor':'end',fill:'var(--a)'});
+  if(b>0.12&&ab>0.08) txt(s,X+S*b/2,ly+5,f4(v),{class:'lbl mono','text-anchor':'middle','font-weight':'700',fill:'#fff'});
+  txt(s,X+S-6,Y+16,'Todo S = 1',{class:'lbl mut','text-anchor':'end'});
+  $('#mF').innerHTML=boldF(`P(A ∩ B) = P(B) · P(A | B) = ${f2(b)} × ${f2(ab)} = ${f4(v)}`);
+  document.querySelectorAll('#mPre .btn').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.k===mSel)));
+  $('#mTxt').textContent=mInfo+`. El ${pct(v)} de los casos tiene B y A a la vez.`;
+}
+['mB','mAB'].forEach(id=>$('#'+id).addEventListener('input',()=>{mInfo='Valores propios';mSel=-1;drawM()})); drawM();
+
+/* ---------- 6–8. Árbol, total y Bayes ---------- */
+const TPRE={
+  envios:{name:'Envíos',res:'Retraso',rs:'R',g:[['Internacional','I',.25,.40],['Nacional','N',.75,.10]]},
+  proveedores:{name:'Proveedores',res:'Defectuosa',rs:'D',g:[['Proveedor A','A',.50,.02],['Proveedor B','B',.30,.03],['Proveedor C','C',.20,.05]]},
+  fraude:{name:'Alerta de fraude',res:'Alerta',rs:'A',g:[['Fraude','F',.01,.95],['No fraude','F′',.99,.04]]},
+  devol:{name:'Devoluciones',res:'Devuelto',rs:'D',g:[['Web','W',.70,.04],['App','P',.30,.12]]},
+  turnos:{name:'Defectos por turno',res:'Defectuosa',rs:'D',g:[['Mañana','M',.50,.01],['Tarde','T',.30,.02],['Noche','N',.20,.04]]},
+};
+const TR={k:'proveedores',step:0,bayes:2,g:null,res:'',rs:''};
+function loadTree(k){TR.k=k;const p=TPRE[k];TR.g=p.g.map(x=>x.slice());TR.res=p.res;TR.rs=p.rs;TR.bayes=k==='fraude'?0:p.g.length-1;buildEdit();fillBy();drawTree()}
+document.querySelectorAll('#trPre, .presets').forEach(box=>Object.entries(TPRE).forEach(([k,p])=>{const b=document.createElement('button');b.className='btn';b.textContent=p.name;b.dataset.k=k;b.onclick=()=>loadTree(k);box.appendChild(b)}));
+document.querySelectorAll('#trSteps button.step').forEach(b=>b.onclick=()=>{TR.step=+b.dataset.s;drawTree()});
+function buildEdit(){
+  const e=$('#trEdit'); e.innerHTML='';
+  TR.g.forEach((g,i)=>{const r=document.createElement('div');r.className='row';
+    r.innerHTML=`<strong>${g[0]} (${g[1]})</strong><label>P(${g[1]}) <input type="number" min="0" max="1" step="0.01" id="tg${i}" value="${g[2]}"></label><label>P(${TR.rs} | ${g[1]}) <input type="number" min="0" max="1" step="0.01" id="tr${i}" value="${g[3]}"></label>`;
+    e.appendChild(r);
+    r.querySelector('#tg'+i).addEventListener('input',ev=>{TR.g[i][2]=Math.min(1,Math.max(0,+ev.target.value||0));drawTree()});
+    r.querySelector('#tr'+i).addEventListener('input',ev=>{TR.g[i][3]=Math.min(1,Math.max(0,+ev.target.value||0));drawTree()});
+  });
+  const w=document.createElement('p');w.id='trWarn';w.className='warn';e.appendChild(w);
+}
+function fillBy(){const s=$('#byG');s.innerHTML='';TR.g.forEach((g,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${g[0]} (${g[1]})`;s.appendChild(o)});s.value=TR.bayes}
+$('#byG').onchange=e=>{TR.bayes=+e.target.value;drawTree()};
+const C=(c,t)=>`<span class="${c}">${t}</span>`;
+function drawTree(){
+  document.querySelectorAll('#trPre .btn, .presets .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===TR.k)));
+  document.querySelectorAll('#trSteps button.step').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===TR.step)));
+  const G=TR.g, n=G.length, res=TR.res, R=TR.rs, Rn=R+'′';
+  const joint=G.map(g=>g[2]*g[3]), jointN=G.map(g=>g[2]*(1-g[3])), tot=joint.reduce((a,b)=>a+b,0);
+  const sumP=G.reduce((a,g)=>a+g[2],0);
+  const sumTxt=G.map(g=>f2(g[2])).join(' + ')+' = '+(Math.abs(sumP-1)<0.0001?'1':f2(sumP));
+  const warn=$('#trWarn'); if(warn) warn.textContent=Math.abs(sumP-1)>0.0001?`Las probabilidades de los grupos suman ${f2(sumP)}: deben sumar 1.`:'';
+  const j=Math.min(TR.bayes,n-1), gj=G[j], post=tot>0?joint[j]/tot:0;
+
+  const build=(step,mode)=>{
+    const bh=120, W=1080, H=n*bh+44, s=document.createElementNS(NS,'svg');
+    s.setAttribute('viewBox',`0 0 ${W} ${H}`); s.setAttribute('role','img'); s.setAttribute('aria-label','Diagrama de árbol');
+    const rx=24, ry=H/2+12, gx=230, ox=470, jx=530;
+    el('circle',{cx:rx,cy:ry,r:9,fill:'var(--navy)'},s);
+    txt(s,gx,18,'Grupo',{class:'lbl mut','text-anchor':'middle'});
+    txt(s,ox,18,'Resultado',{class:'lbl mut','text-anchor':'middle'});
+    if(step>=1) txt(s,jx,18,'Multiplica el camino',{class:'lbl',fill:'var(--mul)','font-weight':'600'});
+    const aY=[];
+    G.forEach((g,i)=>{
+      const gy=44+bh*i+bh/2, sel=step===3&&i===j;
+      el('line',{x1:rx,y1:ry,x2:gx-48,y2:gy,stroke:'var(--navy)','stroke-width':1.8},s);
+      const below=gy>ry+10;
+      txt(s,gx-56,below?gy+30:gy-24,`P(${g[1]}) = ${f2(g[2])}`,{class:'lbl mono','text-anchor':'end','font-weight':'600',fill:'var(--b)'});
+      el('rect',{x:gx-48,y:gy-16,width:96,height:32,rx:5,fill:'var(--card)',stroke:sel?'var(--navy)':'var(--b)','stroke-width':sel?3:1.5},s);
+      txt(s,gx,gy+5,g[1],{class:'lbl','text-anchor':'middle','font-weight':'700',fill:'var(--b)',style:'font-size:15px'});
+      [[true,-28,g[3]],[false,28,1-g[3]]].forEach(([isA,dy,pr])=>{
+        const oy=gy+dy, col=isA?'var(--a)':'var(--muted)', lab=isA?R:Rn, na=isA?{}:{'data-notA':'1'};
+        el('line',Object.assign({x1:gx+48,y1:gy,x2:ox-24,y2:oy,stroke:col,'stroke-width':isA?2:1.3},na),s);
+        txt(s,(gx+48+ox-24)/2,(gy+oy)/2+(isA?-9:19),`P(${lab}|${g[1]}) = ${f2(pr)}`,Object.assign({class:'lbl mono','text-anchor':'middle',fill:col},na));
+        el('rect',Object.assign({x:ox-24,y:oy-13,width:48,height:26,rx:4,fill:'var(--card)',stroke:col,'stroke-width':isA?2:1.2},na),s);
+        txt(s,ox,oy+5,lab,Object.assign({class:'lbl','text-anchor':'middle',fill:col,'font-weight':'700'},na));
+        if(step>=1){
+          const v=isA?joint[i]:jointN[i];
+          const t=txt(s,jx,oy+5,`P(${g[1]}∩${lab}) = ${f2(g[2])} × ${f2(pr)} = ${f4(v)}`,Object.assign({class:'lbl mono',fill:isA?'var(--mul)':'var(--muted)','font-weight':isA?'600':'400'},na));
+          if(sel&&isA){t.setAttribute('fill','var(--navy)');t.setAttribute('font-weight','700')}
+        }
+        if(isA)aY.push(oy);
+      });
+    });
+    if(step>=2){
+      const bx=840, my=(aY[0]+aY[aY.length-1])/2;
+      el('path',{d:`M${bx-10},${aY[0]} H${bx} V${aY[aY.length-1]} H${bx-10}`,fill:'none',stroke:'var(--sum)','stroke-width':2},s);
+      el('line',{x1:bx,y1:my,x2:bx+16,y2:my,stroke:'var(--sum)','stroke-width':2},s);
+      el('rect',{x:bx+18,y:my-36,width:210,height:50,rx:6,fill:'var(--sum-soft)',stroke:'var(--sum)'},s);
+      txt(s,bx+123,my-16,'Suma',{class:'lbl','text-anchor':'middle',fill:'var(--sum)','font-weight':'600'});
+      txt(s,bx+123,my+5,`P(${R}) = ${f4(tot)}`,{class:'lbl mono','text-anchor':'middle','font-weight':'700',fill:'var(--sum)'});
+      if(step===3){
+        el('rect',{x:bx+18,y:my+24,width:210,height:50,rx:6,fill:'var(--card)',stroke:'var(--navy)','stroke-width':2},s);
+        txt(s,bx+123,my+44,'Divide',{class:'lbl','text-anchor':'middle',fill:'var(--navy)','font-weight':'600'});
+        txt(s,bx+123,my+65,`P(${gj[1]}|${R}) = ${tot>0?f4(post):'—'}`,{class:'lbl mono','text-anchor':'middle','font-weight':'700',fill:'var(--navy)'});
+      }
+    }
+    if(mode==='bayes') s.querySelectorAll('[data-notA]').forEach(e=>e.setAttribute('opacity','.25'));
+    return s;
+  };
+  const put=(id,st,mode)=>{const b=$(id);b.innerHTML='';b.appendChild(build(st,mode))};
+  put('#tree',TR.step,'free'); put('#treeTot',2,'total'); put('#treeBay',3,'bayes');
+  const list=(step,mode)=>{
+    let h='<ul class="tl"><li><div class="node"><strong>Inicio</strong></div><ul>';
+    G.forEach((g,i)=>{
+      const sel=step===3&&i===j;
+      h+=`<li class="${sel?'sel':''}"><div class="node"><span class="tag cb">${g[1]}</span><span>${g[0]}</span><span class="mono cb">P(${g[1]}) = ${f2(g[2])}</span></div><ul>`;
+      [[true,g[3]],[false,1-g[3]]].forEach(([isA,pr])=>{
+        const lab=isA?R:Rn, fade=(mode==='bayes'&&!isA)?' faded':'', c=isA?'ca':'muted';
+        h+=`<li class="${fade}"><div class="node"><span class="tag ${c}">${lab}</span><span class="mono ${c}">P(${lab}|${g[1]}) = ${f2(pr)}</span>`;
+        if(step>=1) h+=`<span class="joint${isA?'':' n'}">P(${g[1]}∩${lab}) = ${f2(g[2])} × ${f2(pr)} = ${f4(isA?joint[i]:jointN[i])}</span>`;
+        h+='</div></li>';
+      });
+      h+='</ul></li>';
+    });
+    h+='</ul></li></ul>';
+    if(step>=2) h+=`<div class="tbox sum"><strong class="cs">Suma:</strong> P(${R}) = ${joint.map(f4).join(' + ')} = <strong class="cs">${f4(tot)}</strong></div>`;
+    if(step===3&&tot>0) h+=`<div class="tbox div"><strong class="cn">Divide:</strong> P(${gj[1]}|${R}) = ${f4(joint[j])} / ${f4(tot)} = <strong class="cn">${f4(post)}</strong></div>`;
+    return h;
+  };
+  $('#treeL').innerHTML=list(TR.step,'free'); $('#treeTotL').innerHTML=list(2,'total'); $('#treeBayL').innerHTML=list(3,'bayes');
+
+  // Leyenda: qué significa cada letra
+  const key=`<div><strong>Letras:</strong> ${G.map(g=>`${C('cb',g[1])} = ${g[0]}`).join(' · ')} · ${C('ca',R)} = ${res} · ${C('muted',Rn)} = no ${res.toLowerCase()}</div>
+   <div><span class="cb">P(${G[0][1]})</span> = qué parte del total es el grupo. &nbsp; <span class="ca">P(${R}|${G[0][1]})</span> = qué parte de ese grupo tiene «${res}». &nbsp; <span class="cm">P(${G[0][1]}∩${R})</span> = el camino completo (se multiplica).</div>`;
+  document.querySelectorAll('.treekey').forEach(k=>k.innerHTML=key);
+
+  const g0=G[0];
+  const msg=[`Primera rama: los grupos (${G.map(g=>g[1]).join(', ')}): ${sumTxt}. Segunda rama: dentro de cada grupo, ${R} o ${Rn}.`,
+    `<div>Las ramas de la segunda columna son <span class="ca">condicionales</span>: ${f2(g0[3])} es <span class="ca">P(${R}|${g0[1]})</span>, «dentro de ${g0[0]}, el ${+(g0[3]*100).toFixed(2)} % es ${res.toLowerCase()}», y ${f2(1-g0[3])} es P(${Rn}|${g0[1]}). Ninguna de las dos es P(${R}).</div>
+     <div style="margin-top:6px"><b class="fx">P(grupo ∩ ${R}) = P(grupo) × P(${R}|grupo)</b>: ${G.map(g=>`<br><span class="cm">P(${g[1]}∩${R})</span> = ${f2(g[2])} × ${f2(g[3])} = ${f4(g[2]*g[3])}`).join('')}</div>
+     <div style="margin-top:6px"><span class="cs">P(${R})</span> no aparece en ninguna rama: se obtiene en el paso 2, <a href="#total">sumando</a> los caminos que terminan en ${R}: ${G.map(g=>f4(g[2]*g[3])).join(' + ')} = ${f4(tot)}. Y <span class="cs">P(${Rn})</span> = 1 − P(${R}) = 1 − ${f4(tot)} = ${f4(1-tot)}.</div>`];
+  $('#trMsg').innerHTML=msg[Math.min(TR.step,1)];
+
+  // Fórmula general y con números
+  const gen=`P(${R}) = `+G.map(g=>`P(${R}|${g[1]})·P(${g[1]})`).join(' + ');
+  const num=`P(${R}) = `+G.map(g=>`(${f2(g[3])})(${f2(g[2])})`).join(' + ')+` = ${f4(tot)}`;
+  $('#totF').innerHTML=`${gen}<br>${num}`;
+  const N=1000, nn=x=>(Math.round(x*10)/10).toString(), PC=x=>+(x*100).toFixed(2)+' %';
+  $('#totWalk').innerHTML=`
+  <li><div><h4>Ponle letra a cada cosa</h4><p>${G.map(g=>`${C('cb',g[1])} = ${g[0]}`).join(', ')}; ${C('ca',R)} = ${res}. Los grupos no se cruzan y entre todos forman el total: ${sumTxt}${Math.abs(sumP-1)<0.0001?'':' (deberían sumar 1)'}.</p></div></li>
+  <li><div><h4>Ubica los datos en el árbol</h4><p>1.ª rama: ${G.map(g=>`${C('cb','P('+g[1]+') = '+f2(g[2]))}`).join(', ')}.<br>2.ª rama: ${G.map(g=>`${C('ca','P('+R+'|'+g[1]+') = '+f2(g[3]))}`).join(', ')}.</p></div></li>
+  <li><div><h4>${C('cm','Multiplica')} cada camino que llega a ${R}</h4>${G.map((g,i)=>`<div class="formula">P(${g[1]}∩${R}) = P(${g[1]})·P(${R}|${g[1]}) = ${f2(g[2])} × ${f2(g[3])} = ${C('cm',f4(joint[i]))}</div>`).join('')}</div></li>
+  <li><div><h4>${C('cs','Suma')} los caminos</h4><div class="formula">${gen}<br>P(${R}) = ${joint.map(v=>C('cm',f4(v))).join(' + ')} = ${C('cs',f4(tot))}</div></div></li>
+  <li><div><h4>Compruébalo con ${N} casos</h4><p>Se imaginan ${N} casos y cada probabilidad se multiplica por ${N} (no por 100) para que salgan cantidades enteras.</p><div class="freq">${G.map((g,i)=>`<span>${g[1]}: ${f2(g[2])} × ${N} = ${nn(g[2]*N)} casos → ${f4(joint[i])} × ${N} = ${nn(joint[i]*N)} con ${R}</span>`).join('')}</div><p>${C('cs','P('+R+') = '+f4(tot))} → ${f4(tot)} × ${N} = ${nn(tot*N)} de cada ${N} tienen ${R}. Comprobación: ${nn(tot*N)} / ${N} = ${f4(tot)}.</p><p class="note">No confundir: × 100 da el porcentaje (${f4(tot)} × 100 = ${PC(tot)}); × ${N} da cuántos casos de cada ${N} (${nn(tot*N)}). Es lo mismo: ${+(tot*100).toFixed(2)} de cada 100 = ${nn(tot*N)} de cada ${N}.</p></div></li>
+  <li><div><h4>Interpreta</h4><p>${C('cs',`El ${PC(tot)} de todos los casos tiene «${res}»`)}. No es el promedio simple de las tasas: cada tasa pesa según el tamaño de su grupo.</p></div></li>`;
+
+  // Bayes
+  if(tot>0){
+    $('#byWalk').innerHTML=`
+  <li><div><h4>¿Qué sé y qué me preguntan?</h4><p>Ya sé que ocurrió ${C('ca',R+' ('+res.toLowerCase()+')')}. Me preguntan si vino de ${C('cb',gj[1]+' ('+gj[0]+')')}: ${C('cn','P('+gj[1]+'|'+R+')')}. No confundir con P(${R}|${gj[1]}) = ${f2(gj[3])}, que es dato del árbol.</p></div></li>
+  <li><div><h4>Quédate solo con los caminos que llegan a ${R}</h4><p>Las ramas ${Rn} se descartan (en el árbol aparecen tenues).</p></div></li>
+  <li><div><h4>Denominador: ${C('cs','P('+R+')')} por probabilidad total</h4><div class="formula">P(${R}) = ${joint.map(f4).join(' + ')} = ${C('cs',f4(tot))}</div></div></li>
+  <li><div><h4>Numerador: el camino de ${gj[1]}</h4><div class="formula">P(${gj[1]}∩${R}) = ${f2(gj[2])} × ${f2(gj[3])} = ${C('cm',f4(joint[j]))}</div></div></li>
+  <li><div><h4>${C('cn','Divide')}</h4><div class="formula">P(${gj[1]}|${R}) = P(${gj[1]}∩${R}) / P(${R}) = ${C('cm',f4(joint[j]))} / ${C('cs',f4(tot))} = ${C('cn',f4(post))}</div><p>Con ${N} casos (se multiplica por ${N}, no por 100): con ${R} hay ${f4(tot)} × ${N} = ${nn(tot*N)}, y de ${gj[1]} con ${R} hay ${f4(joint[j])} × ${N} = ${nn(joint[j]*N)}. Entonces ${nn(joint[j]*N)} / ${nn(tot*N)} = ${f4(post)}: de las ${nn(tot*N)} con ${R}, ${nn(joint[j]*N)} vienen de ${gj[1]}.</p></div></li>
+  <li><div><h4>Interpreta</h4><p><span class="cs">Antes</span> de saber nada, la probabilidad de que un caso venga de ${gj[1]} es P(${gj[1]}) = ${C('cb',f2(gj[2]))} (${PC(gj[2])}). <span class="cs">Después</span> de saber que tiene ${R} (${res.toLowerCase()}), es P(${gj[1]}|${R}) = ${C('cn',f4(post))} (${PC(post)}).</p><p>${post>gj[2]?'Subió':post<gj[2]?'Bajó':'No cambió'} porque el ${PC(gj[3])} de los casos de ${gj[1]} (${f2(gj[3])}) tiene ${R}, ${gj[3]>tot?'más':gj[3]<tot?'menos':'lo mismo'} que el promedio de todos los casos, ${PC(tot)} (${f4(tot)}). Regla: si un grupo tiene ${R} más que el promedio, pesa más entre los que tienen ${R}; si tiene menos, pesa menos.</p></div></li>`;
+    $('#byF').innerHTML=`P(${gj[1]}|${R}) = P(${R}|${gj[1]})·P(${gj[1]}) / P(${R}) = (${f2(gj[3])})(${f2(gj[2])}) / ${f4(tot)} = ${f4(post)}`;
+    $('#byTxt').innerHTML='';
+  } else { $('#byWalk').innerHTML=''; $('#byF').textContent=`P(${R}) = 0: no se puede dividir.`; }
+  $('#byTable').innerHTML=`<thead><tr><th>Grupo</th><th>Tasa de ${R} en el grupo<br>P(${R}|grupo)</th><th>Antes de saber que tiene ${R}<br>P(grupo)</th><th>Después de saber que tiene ${R}<br>P(grupo|${R})</th><th>¿Qué pasó?</th></tr></thead><tbody>`+
+    G.map((x,i)=>{const d=tot>0?joint[i]/tot:0, ch=Math.abs(d-x[2])<5e-5?'igual':d>x[2]?'sube':'baja';return `<tr${i===j?' style="font-weight:600"':''}><td>${x[1]} · ${x[0]}</td><td class="mono">${f2(x[3])} (${PC(x[3])})</td><td class="mono">${f4(x[2])}</td><td class="mono">${tot>0?f4(d):'—'}</td><td>${ch}</td></tr>`}).join('')+`<tr><td>Promedio de todos</td><td class="mono">${f4(tot)} (${PC(tot)})</td><td></td><td></td><td></td></tr>`+'</tbody>';
+}
+loadTree('proveedores');
+
+/* ---------- 10. Práctica ---------- */
+const Q=[
+  {t:'Reglas',q:'Si P(A) = 0.35, ¿cuánto vale P(Aᶜ)?',o:['0.35','0.65','1.35','0.1225'],a:'0.65',why:'Complemento: 1 − 0.35 = 0.65.'},
+  {t:'Reglas',q:'¿Cuál de estos valores NO puede ser una probabilidad?',o:['0','0.999','1','1.05'],a:'1.05',why:'Axioma 1: toda probabilidad está entre 0 y 1.'},
+  {t:'Reglas',q:'30 % de los empleados se interesa en Ventas, 25 % en Marketing y 10 % en ambos. ¿P(Ventas o Marketing)?',o:['0.5500','0.4500','0.0750','0.3500'],a:'0.4500',why:'Unión: 0.30 + 0.25 − 0.10 = 0.45. Si no restas el 10 %, lo cuentas dos veces (0.55).'},
+  {t:'Reglas',q:'Se saca una carta de una baraja inglesa de 52 cartas (4 palos de 13 cartas; hay 4 ases y 13 corazones). ¿P(as o corazón)?',o:['0.3269','0.3077','0.0192','0.2500'],a:'0.3077',why:'No son excluyentes: el as de corazones está en ambos. 4/52 + 13/52 − 1/52 = 16/52 = 0.3077.'},
+  {t:'Reglas',q:'A y B son excluyentes, con P(A) = 0.25 y P(B) = 0.40. ¿P(A ∪ B)?',o:['0.6500','0.5500','0.1000','0.7500'],a:'0.6500',why:'Si son excluyentes, P(A ∩ B) = 0 y la unión es la suma: 0.25 + 0.40 = 0.65.'},
+  {t:'Reglas',q:'Una máquina produce 3 % de piezas defectuosas. Si se elige una pieza al azar, ¿P(no sea defectuosa)?',o:['0.0300','0.9700','0.0009','0.9100'],a:'0.9700',why:'Complemento: 1 − 0.03 = 0.97.'},
+  {t:'Reglas',q:'Se despachan 3 pedidos de forma independiente; cada uno llega tarde con probabilidad 0.10. ¿P(al menos uno tarde)?',o:['0.3000','0.2710','0.0010','0.7290'],a:'0.2710',why:'1 − P(ninguno tarde) = 1 − (0.90)³ = 1 − 0.729 = 0.271.'},
+  {t:'Reglas',q:'Cada paquete llega dañado con probabilidad 0.08, de forma independiente. ¿P(ninguno de 5 paquetes llegue dañado)?',o:['0.6000','0.6591','0.4000','0.3409'],a:'0.6591',why:'Todos bien a la vez: (0.92)⁵ = 0.6591. Su complemento, 0.3409, sería «al menos uno dañado».'},
+  {t:'Condicional',tab:'foros',q:'Con la tabla de foros (80 estudiantes): dado que un estudiante NO participa en foros, ¿P(no apruebe)?',o:['0.4000','0.6000','0.1500','0.2400'],a:'0.4000',why:'A = no aprueba, B = no participa.<br>P(A ∩ B) = 12/80 = 0.15 y P(B) = 30/80 = 0.375.<br>P(A | B) = 0.15 / 0.375 = 0.4000 (es lo mismo que 12/30).<br>Ojo: 0.15 es P(A ∩ B), sin dividir entre B; y 12/20 = 0.60 sería P(no participa | no aprueba), al revés.'},
+  {t:'Condicional',tab:'calidad',q:'Con la tabla de calidad (100 piezas): dado que una pieza NO cumple, ¿P(sea de la Línea 1)?',o:['0.2000','0.4000','0.1200','0.6000'],a:'0.4000',why:'A = Línea 1, B = no cumple.<br>P(A ∩ B) = 12/100 = 0.12 y P(B) = 30/100 = 0.30.<br>P(A | B) = 0.12 / 0.30 = 0.4000 (es lo mismo que 12/30).<br>Ojo: 0.12 es P(A ∩ B), 0.60 = 60/100 es P(A) sin la condición, y 12/60 = 0.20 sería P(no cumple | Línea 1), al revés.'},
+  {t:'Condicional',tab:'calidad',q:'Con la tabla de calidad (100 piezas): dado que una pieza es de la Línea 2, ¿P(cumpla)?',o:['0.2200','0.3143','0.5500','0.7000'],a:'0.5500',why:'A = cumple, B = Línea 2.<br>P(A ∩ B) = 22/100 = 0.22 y P(B) = 40/100 = 0.40.<br>P(A | B) = 0.22 / 0.40 = 0.5500 (es lo mismo que 22/40).<br>Ojo: 0.22 es P(A ∩ B), 0.70 es P(A) sin la condición, y 22/70 = 0.3143 sería P(Línea 2 | cumple), al revés.'},
+  {t:'Condicional',tab:'sucursal',q:'Con la tabla de sucursales (100 productos): dado que un producto NO cumple calidad, ¿P(sea de Norte)?',o:['0.1000','0.3750','0.0600','0.6000'],a:'0.3750',why:'A = Norte, B = no cumple.<br>P(A ∩ B) = 6/100 = 0.06 y P(B) = 16/100 = 0.16.<br>P(A | B) = 0.06 / 0.16 = 0.3750 (es lo mismo que 6/16).<br>Ojo: 0.06 es P(A ∩ B), 0.60 = 60/100 es P(A) sin la condición, y 6/60 = 0.10 sería P(no cumple | Norte), al revés.'},
+  {t:'Independencia',tab:'calidad',q:'Con la tabla de calidad (100 piezas): ¿cumplir y ser de la Línea 1 son eventos independientes?',o:['Sí','No'],a:'No',why:'A = cumple, B = Línea 1.<br>P(A) = 70/100 = 0.70 (todas las piezas).<br>P(A | B) = 48/60 = 0.80 (solo las de la Línea 1).<br>Como 0.80 ≠ 0.70, saber la línea cambia la probabilidad de cumplir: no son independientes.'},
+  {t:'Independencia',q:'Se lanza un dado de 6 caras. A = sale par, C = sale múltiplo de 3. ¿Son independientes?',o:['Sí','No'],a:'Sí',why:'P(A ∩ C) = P(sale 6) = 1/6 y P(A)·P(C) = (1/2)(1/3) = 1/6. Son iguales: independientes (y no excluyentes).'},
+  {t:'Independencia',q:'Dos eventos con probabilidad positiva son excluyentes. ¿Pueden ser independientes?',o:['Sí, siempre','Nunca','Depende de los valores'],a:'Nunca',why:'Si son excluyentes, P(A ∩ B) = 0, pero P(A)·P(B) > 0. No pueden ser iguales.'},
+  {t:'Multiplicación',q:'El 60 % de los clientes compra en línea y, de ellos, el 25 % usa un cupón. ¿P(compra en línea y usa cupón)?',o:['0.8500','0.1500','0.3500','0.2500'],a:'0.1500',why:'El dato viene condicionado («de ellos»): P(L) · P(C | L) = 0.60 × 0.25 = 0.15.'},
+  {t:'Multiplicación',q:'De una baraja inglesa de 52 cartas (con 4 ases) se sacan 2 cartas, sin devolver la primera. ¿P(ambas sean ases)?',o:['0.0059','0.0045','0.1538','0.0769'],a:'0.0045',why:'Dependientes: (4/52)(3/51) = 12/2652 = 0.0045. La segunda tiene un as y una carta menos.'},
+  {t:'Total',q:'25 % de los envíos son internacionales (40 % con retraso) y 75 % nacionales (10 % con retraso). ¿P(retraso)?',o:['0.2500','0.1750','0.5000','0.1000'],a:'0.1750',why:'(0.25)(0.40) + (0.75)(0.10) = 0.100 + 0.075 = 0.175. No es el promedio simple (0.25).'},
+  {t:'Total',q:'70 % de los pedidos por web (se devuelve el 4 %) y 30 % por app (se devuelve el 12 %). ¿P(devuelto)?',o:['0.0640','0.1600','0.0800','0.0360'],a:'0.0640',why:'(0.70)(0.04) + (0.30)(0.12) = 0.028 + 0.036 = 0.064.'},
+  {t:'Total',q:'1 % de las transacciones son fraude. La alerta suena en el 95 % de los fraudes y en el 4 % de las legítimas. ¿P(suene la alerta)?',o:['0.9900','0.0491','0.0095','0.0400'],a:'0.0491',why:'(0.01)(0.95) + (0.99)(0.04) = 0.0095 + 0.0396 = 0.0491.'},
+  {t:'Bayes',q:'1 % de las transacciones son fraude. La alerta suena en el 95 % de los fraudes y en el 4 % de las legítimas. Si sonó la alerta, ¿P(sea fraude de verdad)?',o:['0.9500','0.0100','0.1935','0.5000'],a:'0.1935',why:'P(alerta) = 0.0095 + 0.0396 = 0.0491. Bayes: 0.0095 / 0.0491 = 0.1935. De cada 100 alertas, unas 19 son fraude y 81 son falsas alarmas.'},
+  {t:'Bayes',q:'25 % de los envíos son internacionales (40 % con retraso) y 75 % nacionales (10 % con retraso). Si un envío llegó con retraso, ¿P(sea internacional)?',o:['0.4000','0.2500','0.5714','0.1000'],a:'0.5714',why:'P(R) = (0.25)(0.40) + (0.75)(0.10) = 0.175. Bayes: 0.100 / 0.175 = 0.5714. Fíjate que P(R | I) = 0.40 y P(I | R) = 0.5714 no son lo mismo.'},
+  {t:'Bayes',q:'70 % de los pedidos son por web (se devuelve el 4 %) y 30 % por app (se devuelve el 12 %). Si un pedido fue devuelto, ¿P(venga de la app)?',o:['0.1200','0.3000','0.5625','0.0360'],a:'0.5625',why:'P(devuelto) = 0.028 + 0.036 = 0.064. Bayes: 0.036 / 0.064 = 0.5625. La app es el 30 % de los pedidos, pero el 56.25 % de las devoluciones.'},
+  {t:'Bayes',q:'Proveedores A (50 %, 2 % defectuosas), B (30 %, 3 %) y C (20 %, 5 %). Si la pieza es defectuosa, ¿P(sea del proveedor B)?',o:['0.3000','0.0300','0.3103','0.0290'],a:'0.3103',why:'P(D) = 0.0290. Bayes: 0.0090 / 0.0290 = 0.3103.'},
+  {t:'Bayes',q:'Turnos: mañana 50 %, tarde 30 %, noche 20 %; defectuosas 1 %, 2 % y 4 %. Si una pieza es defectuosa, ¿P(sea del turno noche)?',o:['0.0400','0.2000','0.4211','0.0190'],a:'0.4211',why:'P(D) = 0.005 + 0.006 + 0.008 = 0.019. Bayes: 0.008 / 0.019 = 0.4211.'},
+  {t:'Bayes',q:'30 % de clientes nuevos y 70 % recurrentes. Reclaman el 10 % de los nuevos y el 4 % de los recurrentes. Si hubo reclamo, ¿P(cliente nuevo)?',o:['0.5172','0.3000','0.0580','0.1000'],a:'0.5172',why:'P(reclamo) = 0.03 + 0.028 = 0.058. Bayes: 0.03 / 0.058 = 0.5172.'},
+];
+const HINT=[["enfoques|adicion", "P(Aᶜ) = 1 − P(A)", "«No ocurre» es el complemento: lo que falta para llegar a 1."], ["enfoques", "0 ≤ P(A) ≤ 1", "Axioma 1: ninguna probabilidad es negativa ni mayor que 1."], ["adicion", "P(A ∪ B) = P(A) + P(B) − P(A ∩ B)", "«o» es unión. El 10 % que está en ambos se contaría dos veces si no se resta."], ["adicion", "P(A ∪ B) = P(A) + P(B) − P(A ∩ B)", "Hay 4 ases y 13 corazones en 52 cartas. ¿Hay alguna carta que sea as y corazón a la vez? Esa se resta."], ["adicion", "Excluyentes: P(A ∩ B) = 0, entonces P(A ∪ B) = P(A) + P(B)", "Si no pueden ocurrir juntos, no hay nada que restar."], ["adicion", "P(Aᶜ) = 1 − P(A)", "«No defectuosa» es el complemento de «defectuosa»."], ["adicion", "P(al menos uno) = 1 − P(ninguno)", "Primero calcula P(ninguno tarde): cada pedido llega a tiempo con 1 − 0.10 = 0.90, y como son independientes se multiplica 3 veces."], ["multiplicacion", "Independientes: P(todos) = P(A₁) · P(A₂) · …", "Cada paquete llega bien con 1 − 0.08 = 0.92. «Ninguno dañado» = los 5 llegan bien a la vez: multiplica."], ["condicional", "P(A | B) = P(A ∩ B) / P(B)", "A = no aprueba. B = no participa (lo que va después de «dado que»).<br>P(A ∩ B) = la celda donde se cruzan «No participa» y «No aprobó».<br>P(B) = el total de la fila «No participa». Todo entre 80."], ["condicional", "P(A | B) = P(A ∩ B) / P(B)", "A = sea de la Línea 1. B = no cumple (lo que va después de «dado que»).<br>P(A ∩ B) = la celda donde se cruzan «Línea 1» y «No cumple».<br>P(B) = el total de la columna «No cumple». Todo entre 100."], ["condicional", "P(A | B) = P(A ∩ B) / P(B)", "A = cumple. B = es de la Línea 2 (lo que va después de «dado que»).<br>P(A ∩ B) = la celda donde se cruzan «Línea 2» y «Cumple».<br>P(B) = el total de la fila «Línea 2». Todo entre 100."], ["condicional", "P(A | B) = P(A ∩ B) / P(B)", "A = sea de Norte. B = no cumple (lo que va después de «dado que»).<br>P(A ∩ B) = la celda donde se cruzan «Norte» y «No cumple».<br>P(B) = el total de la columna «No cumple». Todo entre 100."], ["condicional", "Independientes si P(A | B) = P(A)", "A = cumple, B = es de la Línea 1.<br>P(A) = el total de la columna «Cumple» entre 100 (mirando todas las piezas).<br>P(A | B) = la celda donde se cruzan «Línea 1» y «Cumple» entre el total de la fila «Línea 1».<br>Calcula las dos y compáralas: si son iguales, son independientes."], ["condicional", "Independientes si P(A ∩ C) = P(A) · P(C)", "¿Qué caras del dado son pares y múltiplos de 3 a la vez? Calcula esa probabilidad y compárala con P(A) · P(C)."], ["condicional", "Excluyentes: P(A ∩ B) = 0. Independientes: P(A ∩ B) = P(A) · P(B)", "Si son excluyentes, P(A ∩ B) vale 0. ¿Puede P(A) · P(B) dar 0 si las dos son positivas?"], ["multiplicacion", "P(A ∩ B) = P(B) · P(A | B)", "B = compra en línea → P(B) = 0.60.<br>A = usa cupón. «De ellos, el 25 %» quiere decir que el 0.25 se calcula solo dentro de los que compran en línea → P(A | B) = 0.25.<br>Reemplaza los dos valores en la fórmula y multiplica."], ["multiplicacion", "P(A ∩ B) = P(A) · P(B | A)", "A = la primera carta es as → P(A) = 4/52.<br>B = la segunda es as, sabiendo que la primera ya fue as. Como no se devuelve, quedan 51 cartas y 3 ases → P(B | A) = 3/51.<br>Multiplica las dos fracciones."], ["total", "P(A) = Σ P(A | Bᵢ) · P(Bᵢ)", "Multiplica cada grupo por su porcentaje de retraso y suma los dos caminos. No es el promedio simple."], ["total", "P(A) = Σ P(A | Bᵢ) · P(Bᵢ)", "Dos caminos: web × su tasa de devolución + app × su tasa de devolución."], ["total", "P(A) = Σ P(A | Bᵢ) · P(Bᵢ)", "La alerta suena en dos caminos: fraude (0.01 × 0.95) y legítima (0.99 × 0.04). Súmalos."], ["bayes", "P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)", "Numerador: el camino fraude y alerta. Denominador: P(alerta), sumando los dos caminos donde suena."], ["bayes", "P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)", "Numerador: el camino internacional y retraso. Denominador: P(retraso) por probabilidad total."], ["bayes", "P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)", "Numerador: el camino app y devuelto. Denominador: P(devuelto) por probabilidad total."], ["bayes", "P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)", "Numerador: el camino del proveedor B (0.30 × 0.03). Denominador: P(D), la suma de los tres caminos."], ["bayes", "P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)", "Numerador: el camino noche (0.20 × 0.04). Denominador: P(D), la suma de los tres turnos."], ["bayes", "P(Bᵢ | A) = P(A | Bᵢ) · P(Bᵢ) / P(A)", "Numerador: el camino cliente nuevo y reclamo. Denominador: P(reclamo), sumando los dos caminos."]];
+const SECNAME={enfoques:'Enfoques y axiomas',adicion:'Adición y complemento',condicional:'Condicional',multiplicacion:'Multiplicación',total:'Probabilidad total',bayes:'Bayes'};
+let qOk=0,qDone=0,qTopic='Todos';
+const TOPICS=['Todos','Reglas','Condicional','Independencia','Multiplicación','Total','Bayes'];
+TOPICS.forEach(t=>{const b=document.createElement('button');b.className='btn';b.textContent=t==='Total'?'Probabilidad total':t;b.dataset.t=t;b.onclick=()=>{qTopic=t;filterQ()};$('#quizTopics').appendChild(b)});
+Q.forEach((it,idx)=>{
+  const d=document.createElement('div');d.className='qitem';d.dataset.t=it.t;
+  const tb=it.tab?DATA[it.tab]:null, h=HINT[idx], hs=h[0].split('|')[h[0].includes('|')?1:0];
+  const tbl=tb?`<div class="tablebox"><table class="qtab"><thead><tr><th></th>${tb.cols.map(c=>`<th>${c}</th>`).join('')}<th>Total</th></tr></thead><tbody>${tb.rows.map((r,i)=>`<tr><th scope="row">${r}</th>${tb.m[i].map(v=>`<td>${v}</td>`).join('')}<td class="tot">${tb.m[i][0]+tb.m[i][1]}</td></tr>`).join('')}<tr><th scope="row">Total</th><td class="tot">${tb.m[0][0]+tb.m[1][0]}</td><td class="tot">${tb.m[0][1]+tb.m[1][1]}</td><td class="tot">${tb.m[0][0]+tb.m[0][1]+tb.m[1][0]+tb.m[1][1]}</td></tr></tbody></table></div>`:'';
+  const hint=`<div class="qside"><details class="hint"><summary>Ver fórmula</summary><div class="hint-b"><div class="formula"><b class="fx">${h[1]}</b></div></div></details><details class="hint"><summary>Pista</summary><div class="hint-b hint-p"><p>${h[2]}</p><a href="#${hs}">Ver la explicación en ${SECNAME[hs]} →</a></div></details></div>`;
+  d.innerHTML=`<span class="eyebrow">${it.t==='Total'?'Probabilidad total':it.t}</span><p>${it.q}</p>`+`<div class="qgrid"><div class="qleft">${tbl}<div class="opts"></div></div>${hint}</div>`+`<div class="res" aria-live="polite"></div>`;
+  const o=d.querySelector('.opts'); let done=false;
+  const answer=(op,save)=>{
+    if(done)return; done=true; qDone++; const good=op===it.a; if(good)qOk++;
+    o.querySelectorAll('button').forEach(x=>{if(x.textContent===it.a)x.setAttribute('aria-pressed','true')});
+    d.querySelector('.res').innerHTML=`<div class="fb ${good?'ok':'no'}"><strong>${good?'Correcto.':'La respuesta es '+it.a+'.'}</strong> ${it.why}</div>`;
+    $('#quizScore').textContent=`Llevas ${qOk} de ${qDone} correctas (de ${Q.length}).`;
+    if(save){ST.quiz[idx]=op;saveST()}
+  };
+  it.o.forEach(op=>{const b=document.createElement('button');b.className='btn mono';b.textContent=op;b.onclick=()=>answer(op,true);o.appendChild(b)});
+  $('#quiz').appendChild(d);
+  if(ST.quiz[idx]!==undefined) answer(ST.quiz[idx],false);
+});
+const rq=document.createElement('button');rq.className='btn';rq.textContent='Reiniciar la práctica';rq.onclick=()=>{ST.quiz={};saveST();location.hash='practica';location.reload()};
+$('#quizScore').after(rq);
+function filterQ(){
+  document.querySelectorAll('#quizTopics .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===qTopic)));
+  let n=0; document.querySelectorAll('#quiz .qitem').forEach(d=>{const on=qTopic==='Todos'||d.dataset.t===qTopic;d.hidden=!on;if(on)n++});
+  if(!qDone) $('#quizScore').textContent=`${n} ejercicios en este tema.`;
+}
+filterQ();
+
+/* ---------- Módulos: un tema a la vez ---------- */
+const SECS=[...document.querySelectorAll('main-sections, section[id]')];
+const NAMES={};document.querySelectorAll('nav.tabs a').forEach(a=>NAMES[a.getAttribute('href').slice(1)]=a.textContent);
+SECS.forEach((sec,i)=>{
+  const nav=document.createElement('div');nav.className='modnav';
+  const prev=SECS[i-1], next=SECS[i+1];
+  nav.innerHTML=`<span>${prev?`<button class="btn" data-go="${prev.id}">← ${NAMES[prev.id]}</button>`:''}</span>
+    <span class="mid"><button class="btn done-btn" data-done="${sec.id}" aria-pressed="false">Marcar como repasado</button></span>
+    <span>${next?`<button class="btn primary" data-go="${next.id}">Siguiente: ${NAMES[next.id]} →</button>`:''}</span>`;
+  sec.appendChild(nav);
+});
+function updProgress(){
+  const n=SECS.filter(s=>ST.done.includes(s.id)).length;
+  $('#progTxt').textContent=`${n} de ${SECS.length} temas repasados`;
+  $('#progBar').style.width=(100*n/SECS.length)+'%';
+  document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('done',ST.done.includes(a.getAttribute('href').slice(1))));
+  document.querySelectorAll('[data-done]').forEach(b=>{const on=ST.done.includes(b.dataset.done);b.setAttribute('aria-pressed',String(on));b.textContent=on?'✓ Repasado':'Marcar como repasado'});
+}
+function showSec(id,scroll){
+  if(!SECS.some(s=>s.id===id)) id=SECS[0].id;
+  SECS.forEach(s=>s.hidden=s.id!==id);
+  document.querySelectorAll('nav.tabs a').forEach(a=>{if(a.getAttribute('href')==='#'+id){a.setAttribute('aria-current','page');a.scrollIntoView({block:'nearest',inline:'center'})}else a.removeAttribute('aria-current')});
+  if(scroll){const n=document.querySelector('nav.tabs');window.scrollTo({top:n.offsetTop-2,behavior:'auto'})}
+}
+document.addEventListener('click',e=>{
+  const go=e.target.closest('[data-go]'); if(go){showSec(go.dataset.go,true);try{history.replaceState(null,'','#'+go.dataset.go)}catch(_){};return}
+  const dn=e.target.closest('[data-done]'); if(dn){const id=dn.dataset.done;ST.done=ST.done.includes(id)?ST.done.filter(x=>x!==id):[...ST.done,id];saveST();updProgress();return}
+  const a=e.target.closest('a[href^="#"]'); if(a){const id=a.getAttribute('href').slice(1); if(SECS.some(s=>s.id===id)){e.preventDefault();showSec(id,true);try{history.replaceState(null,'','#'+id)}catch(_){}}}
+});
+window.addEventListener('hashchange',()=>showSec(location.hash.slice(1),true));
+updProgress(); showSec(location.hash.slice(1),false);
+</script>
+
+</html>
