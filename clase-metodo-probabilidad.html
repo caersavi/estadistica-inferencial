@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+<title>Primero traduzco, después calculo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Lexend:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: cuaderno cuadriculado; una columna de lectura con secciones-actividad; resaltador amarillo = numerador, cian = denominador */
+:root {
+  --paper: #f6f7fb;
+  --grid: #e2e7f1;
+  --surface: #ffffff;
+  --ink: #1b2340;
+  --muted: #59627f;
+  --line: #d3d9e7;
+  --accent: #2b4ad6;
+  --accent-soft: #e7ecff;
+  --hl-num: #ffe066;
+  --hl-den: #8fe3f0;
+  --hl-text: #15192b;
+  --mark: #ffe066;
+  --rule: #6f4bd8;
+  --rule-soft: #f2eeff;
+  --rule-ink: #4b2fb0;
+  --rule-on: #ffffff;
+  --ok: #1d7f53;
+  --ok-soft: #dff3e9;
+  --bad: #b8392f;
+  --bad-soft: #fbe5e2;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
+  --f-hand: "Caveat", "Comic Sans MS", cursive;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11152a; --grid: #1a2038; --surface: #171c33; --ink: #e7eaf6; --muted: #9ba4c4;
+    --line: #2b3354; --accent: #91a8ff; --accent-soft: #232c52; --hl-num: #e9c949; --hl-den: #56c6d8; --mark: rgba(233, 201, 73, .38); --rule: #a58bff; --rule-soft: #241e45; --rule-ink: #cbbcff; --rule-on: #15112b;
+    --ok: #52c792; --ok-soft: #173327; --bad: #f2827a; --bad-soft: #3a1d1c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11152a; --grid: #1a2038; --surface: #171c33; --ink: #e7eaf6; --muted: #9ba4c4;
+  --line: #2b3354; --accent: #91a8ff; --accent-soft: #232c52; --hl-num: #e9c949; --hl-den: #56c6d8; --mark: rgba(233, 201, 73, .38); --rule: #a58bff; --rule-soft: #241e45; --rule-ink: #cbbcff; --rule-on: #15112b;
+  --ok: #52c792; --ok-soft: #173327; --bad: #f2827a; --bad-soft: #3a1d1c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.wrap {
+  max-width: 920px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); font-weight: 800; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; }
+.mono { font-family: var(--f-mono); }
+.eyebrow { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.hand { font-family: var(--f-hand); font-size: 1.45rem; color: var(--accent); line-height: 1.1; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* nav */
+nav.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+nav.top .wrap { padding-block: 10px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+nav.top a {
+  white-space: nowrap; text-decoration: none; color: var(--muted); font-size: .85rem;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid transparent;
+}
+nav.top a:hover { color: var(--ink); border-color: var(--line); background: var(--surface); }
+
+/* hero */
+header.hero { padding-block: 48px 24px; display: grid; gap: 18px; }
+header.hero h1 { font-size: clamp(2.2rem, 7vw, 4rem); font-weight: 800; letter-spacing: -.02em; }
+header.hero h1 .mark { background: linear-gradient(transparent 55%, var(--mark) 55%, var(--mark) 92%, transparent 92%); color: inherit; padding: 0 .1em; }
+.lead { font-size: 1.1rem; color: var(--muted); max-width: 62ch; }
+
+section { padding-block: 40px; border-top: 1px dashed var(--line); display: grid; gap: 20px; }
+section > header { display: grid; gap: 6px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; }
+
+/* pipeline */
+.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.step-btn {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r);
+  padding: 12px 8px; text-align: center; display: grid; gap: 4px; position: relative;
+}
+.step-btn .n { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); }
+.step-btn .t { font-family: var(--f-display); font-weight: 600; font-size: 1rem; }
+.step-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.step-btn:not(:last-child)::after {
+  content: "→"; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: .9rem; background: var(--paper); line-height: 1;
+}
+.step-detail { display: grid; gap: 10px; }
+.step-detail .q { font-size: .95rem; color: var(--ok); background: var(--ok-soft); border-left: 4px solid var(--ok); border-radius: 6px; padding: 8px 12px; }
+.step-detail .q b { color: var(--ok); }
+.mirror { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: .95rem; color: var(--hl-text); background: var(--hl-num); border-radius: var(--r); padding: 12px 16px; }
+.mirror > span:first-child { font-weight: 600; }
+.mirror .chip { font-family: var(--f-mono); background: rgba(255, 255, 255, .6); border: 1px solid rgba(21, 25, 43, .18); padding: 3px 10px; border-radius: 6px; color: var(--hl-text); }
+
+/* golden rule */
+.golden { display: grid; gap: 14px; justify-items: center; text-align: center; }
+.golden .formula { font-family: var(--f-mono); font-size: clamp(1.8rem, 6vw, 2.8rem); font-weight: 600; letter-spacing: .02em; }
+.golden .formula .a { background: var(--hl-num); color: var(--hl-text); padding: 0 .15em; border-radius: 4px; }
+.golden .formula .b { background: var(--hl-den); color: var(--hl-text); padding: 0 .15em; border-radius: 4px; }
+.golden .labels { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+.golden .labels div { display: grid; gap: 2px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+/* translator */
+.trans-card { display: grid; gap: 16px; }
+.trans-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.sentence { font-size: 1.2rem; font-weight: 500; line-height: 1.5; }
+.sentence .kq { background: var(--hl-num); color: var(--hl-text); border-radius: 4px; padding: 0 .2em; }
+.sentence .kk { background: var(--hl-den); color: var(--hl-text); border-radius: 4px; padding: 0 .2em; }
+.sentence .op { font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.sentence.hide-kw .kq, .sentence.hide-kw .kk { background: none; color: inherit; }
+.sentence.hide-kw .op { text-decoration: none; font-weight: inherit; }
+.opt .q, .fx-q { background: var(--hl-num); color: var(--hl-text); border-radius: 3px; padding: 0 .2em; }
+.opt .k, .fx-k { background: var(--hl-den); color: var(--hl-text); border-radius: 3px; padding: 0 .2em; }
+.t-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.letters { font-size: .85rem; color: var(--muted); }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.opt {
+  font-family: var(--f-mono); font-size: 1rem; padding: 10px 6px; border-radius: 8px;
+  background: var(--paper); border: 1.5px solid var(--line);
+}
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt.right { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); font-weight: 600; }
+.opt.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.opt:disabled { cursor: default; }
+.feedback { border-radius: 8px; padding: 12px 14px; font-size: .95rem; }
+.feedback.ok { background: var(--ok-soft); color: var(--ink); border-left: 4px solid var(--ok); }
+.feedback.no { background: var(--bad-soft); color: var(--ink); border-left: 4px solid var(--bad); }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn {
+  border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper);
+  padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: .95rem;
+}
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn:disabled { opacity: .45; cursor: default; }
+.progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.progress > span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+
+/* flashcards */
+.fc-stage { perspective: 1200px; }
+.fc {
+  position: relative; width: 100%; min-height: 260px; border: 0; padding: 0; background: none;
+  transform-style: preserve-3d; transition: transform .55s cubic-bezier(.2,.7,.2,1); display: block; text-align: left;
+}
+.fc.flipped { transform: rotateY(180deg); }
+.fc-face {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 14px; padding: 24px; display: grid; align-content: center; gap: 12px;
+  border: 1.5px solid var(--line); background: var(--surface);
+}
+.fc-face.back { transform: rotateY(180deg); background: var(--accent-soft); border-color: var(--accent); }
+.fc-face .tag { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.fc-face .big { font-family: var(--f-display); font-size: clamp(1.3rem, 3.6vw, 1.8rem); font-weight: 600; line-height: 1.25; }
+.fc-face .fx { font-family: var(--f-mono); font-size: clamp(1rem, 3vw, 1.35rem); font-weight: 600; overflow-wrap: anywhere; }
+.fc-face .ex { font-size: .9rem; color: var(--muted); }
+.fc-face .hint { font-size: .8rem; color: var(--muted); }
+.fc-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fc-count { font-family: var(--f-mono); font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tally { display: flex; gap: 14px; font-size: .9rem; }
+.tally b { font-variant-numeric: tabular-nums; }
+
+/* table explorer */
+.explorer { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.tbl-wrap { overflow-x: auto; }
+table.pt { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 320px; font-variant-numeric: tabular-nums; }
+table.pt th { font-size: .8rem; font-weight: 600; color: var(--muted); text-align: center; padding: 6px 4px; }
+table.pt th.rowh { text-align: left; }
+table.pt td {
+  text-align: center; font-family: var(--f-mono); font-size: 1.05rem; padding: 12px 6px;
+  border-radius: 8px; transition: background .25s, color .25s, box-shadow .25s;
+}
+table.pt td.cell { background: var(--paper); border: 1.5px solid var(--line); }
+table.pt td.marg { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); }
+table.pt td.tot { color: var(--muted); }
+table.pt td.num { background: var(--hl-num) !important; color: var(--hl-text) !important; border-color: transparent !important; font-weight: 600; }
+table.pt td.den { background: var(--hl-den) !important; color: var(--hl-text) !important; border-color: transparent !important; font-weight: 600; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.qbtns { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.qbtn { font-family: var(--f-mono); padding: 9px 6px; border-radius: 8px; background: var(--surface); border: 1.5px solid var(--line); font-size: .95rem; }
+.qbtn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.calc { display: grid; gap: 8px; }
+.calc .eq { font-family: var(--f-mono); font-size: 1.15rem; font-weight: 600; overflow-wrap: anywhere; }
+.calc .eq .n { background: var(--hl-num); color: var(--hl-text); padding: 0 .2em; border-radius: 3px; }
+.calc .eq .d { background: var(--hl-den); color: var(--hl-text); padding: 0 .2em; border-radius: 3px; }
+.calc .say { color: var(--muted); font-size: .95rem; }
+
+/* tree */
+.tree-wrap { overflow-x: auto; }
+.tree-wrap svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.tree-wrap svg text { font-family: var(--f-mono); fill: var(--ink); }
+.tree-wrap svg .muted { fill: var(--muted); }
+.tree-wrap svg .ok { fill: var(--ok); }
+.tree-wrap svg .bad { fill: var(--bad); }
+.two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.two-col .panel { display: grid; gap: 8px; }
+
+/* worked examples */
+.problem { font-size: 1rem; }
+.problem ol { margin: 8px 0 0; padding-left: 1.4em; }
+.stepper { display: grid; gap: 12px; }
+.wstep { border: 1.5px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.wstep > .wh { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.wstep > .wh .k { font-family: var(--f-mono); font-size: .8rem; color: var(--accent); font-weight: 600; }
+.wstep > .wh h3 { font-size: 1.05rem; }
+.wstep > .wb { padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.wstep.locked { opacity: .5; }
+.wstep.locked > .wb { display: none; }
+.wstep.locked > .wh { border-bottom: 0; }
+.mini { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.mini th, .mini td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; }
+.mini th { color: var(--muted); font-weight: 600; font-size: .8rem; }
+.mini td.m { font-family: var(--f-mono); }
+.mini-wrap { overflow-x: auto; }
+.eqline { font-family: var(--f-mono); font-size: 1rem; overflow-wrap: anywhere; }
+.eqline b { background: var(--hl-num); color: var(--hl-text); padding: 0 .2em; border-radius: 3px; font-weight: 600; }
+ul.clean { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.bars { display: grid; gap: 12px; }
+.bar-row { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; align-items: center; font-size: .9rem; }
+.bar-stack { display: grid; gap: 4px; }
+.bar { height: 16px; border-radius: 4px; position: relative; min-width: 2px; }
+.bar.part { background: var(--line); }
+.bar.post { background: var(--accent); }
+.bar span { position: absolute; left: calc(100% + 6px); top: -2px; font-family: var(--f-mono); font-size: .8rem; color: var(--ink); white-space: nowrap; }
+.bar-legend { display: flex; gap: 16px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+
+/* reto */
+.reto-score { font-family: var(--f-display); font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.reto-opts { display: grid; gap: 8px; }
+.reto-opt { text-align: left; padding: 12px 14px; border-radius: 8px; background: var(--paper); border: 1.5px solid var(--line); font-size: .95rem; }
+.reto-opt .f { font-family: var(--f-mono); font-size: .85rem; color: var(--muted); display: block; margin-top: 2px; }
+.reto-opt:hover:not(:disabled) { border-color: var(--accent); }
+.reto-opt.right { background: var(--ok-soft); border-color: var(--ok); }
+.reto-opt.wrong { background: var(--bad-soft); border-color: var(--bad); }
+.have { display: grid; gap: 6px; }
+.have .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.have .lbl { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; min-width: 74px; }
+.have .val { font-family: var(--f-mono); font-size: 1rem; }
+
+.molde-fx { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: clamp(1rem, 3.2vw, 1.45rem); font-weight: 600; }
+.molde-fx .a { background: var(--hl-num); color: var(--hl-text); padding: 2px 8px; border-radius: 5px; }
+.molde-fx .b { background: var(--hl-den); color: var(--hl-text); padding: 2px 8px; border-radius: 5px; }
+.molde-fx .eqs { color: var(--muted); padding: 0 4px; }
+.fill-ex { display: grid; gap: 10px; width: 100%; text-align: left; border-top: 1px dashed var(--line); padding-top: 14px; }
+.fill-btns { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.fill-btn { text-align: left; padding: 10px 12px; border-radius: 8px; background: var(--paper); border: 1.5px solid var(--line); font-size: .9rem; }
+.fill-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.fill-out { display: grid; gap: 8px; }
+.fill-out .who { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .95rem; }
+.fill-out .who span b { font-family: var(--f-mono); padding: 0 6px; border-radius: 4px; color: var(--hl-text); }
+.fill-out .who .fq b { background: var(--hl-num); }
+.fill-out .who .fk b { background: var(--hl-den); }
+nav.top a[aria-current="true"] { color: var(--ink); background: var(--surface); border-color: var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 12px; border-top: 1px dashed var(--line); }
+main section { border-top: 0; padding-block: 28px 8px; }
+.ex-box { display: grid; gap: 6px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.g-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.wstep > .wh .k { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--surface); font-size: .8rem; }
+.wstep.locked > .wh .k { background: var(--line); color: var(--muted); }
+.name-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.name-row .ev { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: 6px 12px; }
+.name-row .ev b { font-family: var(--f-mono); color: var(--accent); }
+.hn { background: var(--hl-num); color: var(--hl-text); padding: 0 .2em; border-radius: 3px; }
+.hd { background: var(--hl-den); color: var(--hl-text); padding: 0 .2em; border-radius: 3px; }
+.res { background: var(--ok-soft); color: var(--ok); border: 1px solid var(--ok); padding: 0 .35em; border-radius: 4px; font-weight: 700; font-family: var(--f-mono); }
+.ok-t { color: var(--ok); font-weight: 600; }
+.warn-t { color: var(--accent); font-weight: 600; }
+ul.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+ul.checks li::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+.interp { display: grid; gap: 8px; }
+.interp p { display: flex; gap: 10px; align-items: baseline; }
+.interp .res { flex: none; min-width: 64px; text-align: center; }
+.mini tr > td.m:nth-child(2) { white-space: nowrap; }
+.agenda { display: flex; flex-wrap: wrap; gap: 8px; }
+.agenda span { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: .85rem; color: var(--muted); }
+.agenda b { color: var(--accent); margin-right: 4px; font-family: var(--f-mono); font-weight: 600; }
+.now-you { display: grid; gap: 8px; border-color: var(--accent); background: var(--accent-soft); }
+.step-detail .ans { font-size: .95rem; background: var(--hl-num); color: var(--hl-text); border-left: 4px solid color-mix(in srgb, var(--hl-num) 60%, #000); border-radius: 6px; padding: 8px 12px; margin-top: -4px; }
+.mult-box { border-color: var(--accent); }
+.rule-card { display: grid; gap: 14px; background: var(--rule-soft); border: 1.5px solid var(--rule); border-radius: 14px; padding: 18px; box-shadow: 0 6px 18px -10px var(--rule); }
+.rule-head { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 600; font-size: 1.05rem; color: var(--rule-ink); flex-wrap: wrap; }
+.rule-badge { background: var(--rule); color: var(--rule-on); font-family: var(--f-body); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+.rule-fx { font-family: var(--f-mono); font-weight: 600; font-size: clamp(1rem, 2.6vw, 1.3rem); text-align: center; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 10px; overflow-wrap: anywhere; }
+.rule-sub { text-align: center; color: var(--ink); }
+.rule-cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.case { display: grid; gap: 6px; justify-items: center; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 10px; }
+.case-tag { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.case-fx { font-family: var(--f-mono); font-size: 1.05rem; font-weight: 600; }
+.case-use { background: var(--rule-soft); border: 1px dashed var(--rule); border-radius: 8px; padding: 4px 10px; }
+.case-arrow { color: var(--rule); font-weight: 700; font-size: .85rem; }
+.case-why { font-size: .88rem; color: var(--muted); }
+.rule-tip, .rule-note { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; background: var(--surface); border-radius: 10px; padding: 10px 12px; }
+.rule-tip { border-left: 4px solid var(--hl-num); }
+.rule-note { border-left: 4px solid var(--ok); }
+.tip-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--rule-ink); white-space: nowrap; }
+@media (max-width: 560px) { .rule-cases { grid-template-columns: minmax(0, 1fr); } }
+.ex-flow { display: grid; gap: 6px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.flow-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.flow-lbl { min-width: 84px; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+.flow-arrow { color: var(--muted); padding-left: 30px; line-height: 1; }
+.flow-note { font-size: .85rem; color: var(--muted); }
+.chip { font-family: var(--f-mono); font-weight: 600; border-radius: 8px; padding: 4px 10px; }
+.chip-have { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+.chip-want { background: var(--hl-num); color: var(--hl-text); }
+.chip-fx { background: var(--rule); color: var(--rule-on); box-shadow: 0 4px 12px -6px var(--rule); }
+.order { display: grid; gap: 8px; }
+.order-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.oc { display: grid; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: .92rem; }
+.oc > b { font-family: var(--f-display); font-size: 1rem; }
+@media (max-width: 560px) { .order-cards { grid-template-columns: minmax(0, 1fr); } .flow-arrow { padding-left: 8px; } }
+.rule-desp { display: grid; gap: 8px; background: var(--surface); border-radius: 10px; padding: 12px; border-left: 4px solid var(--rule); }
+.desp-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chip-fx2 { background: var(--rule-soft); color: var(--rule-ink); border: 1px solid var(--rule); font-size: .92rem; }
+.desp-arrow { color: var(--rule); font-weight: 700; font-size: 1.2rem; }
+.desp-note { font-size: .9rem; color: var(--muted); text-align: center; }
+footer .sign { font-family: var(--f-display); font-weight: 600; font-size: .95rem; color: var(--ink); margin-top: 10px; letter-spacing: .01em; }
+.mirror { width: fit-content; max-width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--rule-soft); border: 1.5px solid var(--rule); border-radius: 12px; padding: 10px 14px; color: var(--ink); font-size: .92rem; box-shadow: 0 6px 18px -12px var(--rule); }
+.mirror .mchip { font-family: var(--f-mono); font-weight: 600; background: var(--surface); color: var(--rule-ink); border: 1px solid var(--rule); border-radius: 8px; padding: 3px 10px; }
+.mirror .mtxt { color: var(--ink); }
+.ex-quote { display: grid; gap: 6px; background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 12px 16px; }
+.ex-quote p { font-size: 1.05rem; font-style: italic; }
+.chk { background: var(--ok-soft); color: var(--ok); border: 1px solid var(--ok); border-radius: 999px; padding: 3px 10px; font-size: .85rem; font-weight: 600; }
+.chip-say { font-family: var(--f-body); background: var(--surface); color: var(--ink); border: 1px solid var(--accent); font-weight: 500; }
+.step-detail .golden { background: var(--paper); box-shadow: none; }
+#stepSlot:empty { display: none; }
+.btn.step-nav { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.btn.step-nav.step-next { background: var(--accent); color: var(--surface); }
+#stepPager { border-top: 0; padding-top: 0; }
+.mini .chip-fx2 { display: inline-block; font-size: .85rem; }
+.rv { font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.rv .rv-a { display: none; }
+.rv .rv-q { display: inline-grid; place-items: center; min-width: 2.2em; background: var(--hl-num); color: var(--hl-text); border-radius: 6px; font-weight: 700; padding: 0 .4em; }
+.rv:not(.shown) { border-style: dashed; }
+.rv:not(.shown):hover { background: var(--surface); }
+.rv.shown .rv-q { display: none; }
+.rv.shown .rv-a { display: inline; }
+.rv-hint { font-size: .85rem; color: var(--muted); }
+.reveal-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 4px; border-top: 1px dashed var(--line); }
+.rv-count { font-family: var(--f-mono); font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mini td.veil { cursor: pointer; vertical-align: middle; }
+.mini td.veil .cell-c { display: none; }
+.mini td.veil::after { content: "?"; display: inline-block; font-family: var(--f-mono); font-weight: 700; color: var(--hl-text); background: var(--hl-num); border-radius: 5px; padding: 0 .45em; }
+.mp-title { font-weight: 600; margin-top: 6px; }
+.hundred { display: grid; gap: 10px; }
+.h-step { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; }
+.h-step > div { display: grid; gap: 4px; min-width: 0; }
+.h-num { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--surface); font-weight: 700; font-size: .85rem; }
+.dots-wrap { display: grid; gap: 10px; justify-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.dots { display: grid; grid-template-columns: repeat(10, 22px); gap: 4px; }
+.dot { display: inline-block; width: 22px; height: 22px; border-radius: 5px; vertical-align: middle; }
+.dot.on { background: var(--accent-soft); border: 2px solid var(--accent); }
+.dot.off { background: color-mix(in srgb, var(--hl-den) 35%, transparent); border: 2px solid var(--hl-den); }
+.dot.cup { background: var(--hl-num); }
+.dots-legend { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; font-size: .85rem; color: var(--muted); }
+.dots-legend > span { display: inline-flex; gap: 6px; align-items: center; }
+.dots-legend .dot { width: 14px; height: 14px; border-radius: 3px; }
+.dots-say { text-align: center; }
+@media (max-width: 420px) { .dots { grid-template-columns: repeat(10, 18px); } .dot { width: 18px; height: 18px; } }
+.plan { display: grid; gap: 6px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; padding: 10px 14px; }
+.plan .tip-label { color: var(--accent); }
+.plan-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.plan-step { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px 3px 4px; font-family: var(--f-mono); font-size: .9rem; }
+.plan-step b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--surface); font-family: var(--f-body); font-size: .75rem; }
+.plan-arr { color: var(--accent); font-weight: 700; }
+.plan-note { font-size: .85rem; color: var(--muted); }
+footer { padding-block: 32px 0; color: var(--muted); font-size: .85rem; border-top: 1px dashed var(--line); }
+
+@media (max-width: 720px) {
+  .explorer { grid-template-columns: minmax(0, 1fr); }
+  .two-col { grid-template-columns: minmax(0, 1fr); }
+  .pipeline { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .step-btn { padding: 10px 2px; }
+  .step-btn .t { font-size: .78rem; }
+  .step-btn:not(:last-child)::after { display: none; }
+  .panel { padding: 16px; }
+  .fc { min-height: 300px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc, .progress > span, table.pt td { transition: none; }
+}
+</style>
+</head><body>
+
+
+<nav class="top" aria-label="Secciones">
+  <div class="wrap" id="navlinks">
+    <a href="#metodo">Método</a>
+    <a href="#traduce">Traducir</a>
+    <a href="#ejemplo1">Ejercicio guiado 1</a>
+    <a href="#ejemplo2">Ejercicio guiado 2</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <header class="hero">
+    <span class="eyebrow">Estadística Inferencial · Clase de retroalimentación</span>
+    <h1>Primero <span class="mark">traduzco</span>, después calculo.</h1>
+    <p class="lead">La mayoría de errores en probabilidad no son de cálculo: son de lectura. Esta clase te da un método de 5 pasos para arrancar cualquier ejercicio de condicional, probabilidad total o Bayes, y actividades para practicarlo.</p>
+    <div class="agenda" aria-label="Agenda de la clase">
+      <span><b>5 min</b> Método</span><span><b>5 min</b> Traducir</span><span><b>8 min</b> Ejercicio guiado 1</span><span><b>7 min</b> Ejercicio guiado 2</span><span><b>10 min</b> Quiz en papel</span>
+    </div>
+  </header>
+
+  <!-- MÉTODO -->
+  <section id="metodo">
+    <header>
+      <span class="eyebrow">El método · 5 min</span>
+      <h2>Cinco pasos, siempre en el mismo orden</h2>
+      <p class="lead">Toca cada paso para ver qué hacer y qué preguntarte.</p>
+    </header>
+    <div class="pipeline" role="group" aria-label="Pasos del método" id="pipeline"></div>
+    <div class="panel step-detail" id="stepDetail" aria-live="polite"></div>
+    <div class="mirror" id="mirror">
+      <span class="rule-badge">Fíjate</span>
+      <span class="mchip">Paso 2: texto → P( )</span>
+      <span class="mtxt">y</span>
+      <span class="mchip">Paso 5: P( ) → texto</span>
+      <span class="mtxt">son el mismo movimiento en direcciones opuestas.</span>
+    </div>
+
+    <div class="panel golden" id="molde">
+      <span class="eyebrow">La condicional es un molde</span>
+      <div class="molde-fx" aria-label="Molde de la probabilidad condicional">
+        <span>P(</span><span class="a">lo que me preguntan</span><span>|</span><span class="b">lo que ya sé</span><span>)</span>
+        <span class="eqs">=</span>
+        <span>P(</span><span class="a">pregunta</span><span>∩</span><span class="b">sé</span><span>)</span>
+        <span class="eqs">÷</span>
+        <span>P(</span><span class="b">lo que ya sé</span><span>)</span>
+      </div>
+      <p class="lead" style="max-width:60ch">En los libros verás <span class="mono">P(A | B)</span>. La <b>A</b> y la <b>B</b> son las <b>dos casillas</b> del molde. En cada problema defines qué es A y qué es B: por ejemplo, A = trabaja, B = tiene beca. Lo que importa es <b>en qué casilla</b> va cada una.</p>
+      <p class="lead" style="max-width:60ch">Las palabras <b>"de los que"</b>, <b>"si"</b>, <b>"dado que"</b> y <b>"entre los"</b> te dicen qué va en la casilla de <b>lo que ya sé</b>.</p>
+      <div class="fill-ex">
+        <span class="eyebrow" style="color:var(--muted)">Toca una frase y mira cómo se llena el molde</span>
+        <div class="fill-btns" id="fillBtns" role="group" aria-label="Frases de ejemplo"></div>
+        <div class="fill-out" id="fillOut" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="pager" id="stepPager" style="border-top:0;padding-top:0"></div>
+  </section>
+
+  <!-- TRADUCTOR -->
+  <section id="traduce">
+    <header>
+      <span class="eyebrow">Practica el paso Traduzco · 5 min</span>
+      <h2>¿De quién habla este número?</h2>
+      <p class="lead">Lee la frase y elige cómo se escribe. Usa <b>A = trabaja</b> y <b>B = tiene beca</b>.</p>
+    </header>
+    <div class="panel trans-card">
+      <div class="trans-meta">
+        <span id="tCount" class="mono"></span>
+        <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="kwToggle" checked> Resaltar palabras clave</label>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="tProg" style="width:0%"></span></div>
+      <div class="t-legend"><span><span class="swatch" style="background:var(--hl-num)"></span>lo que me preguntan (antes de la barra)</span><span><span class="swatch" style="background:var(--hl-den)"></span>lo que ya sé (después de la barra)</span><span><b style="text-decoration:underline">y · o · no</b> = ∩ · ∪ · '</span></div>
+      <p class="sentence" id="tSentence"></p>
+      <div class="opts" id="tOpts"></div>
+      <div id="tFeedback" aria-live="polite"></div>
+      <div class="row-btns">
+        <button class="btn" id="tNext" disabled>Siguiente frase</button>
+        <button class="btn ghost" id="tRestart">Empezar de nuevo</button>
+        <span id="tScore" class="mono" style="color:var(--muted)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- EJEMPLO 1 -->
+  <section id="ejemplo1">
+    <header>
+      <span class="eyebrow">Ejercicio guiado 1 · 8 min · condicionales cruzadas</span>
+      <h2>Compras en línea y cupones</h2>
+    </header>
+    <div class="panel problem">
+      <p>En un almacén, el 40 % de los clientes compra en línea. De los clientes que compran en línea, el 30 % usa cupón de descuento. De los clientes que usan cupón, el 60 % compra en línea.</p>
+      <ol type="a">
+        <li>¿Qué porcentaje compra en línea y usa cupón? ¿Qué porcentaje usa cupón?</li>
+        <li>Si un cliente no compra en línea, ¿cuál es la probabilidad de que use cupón?</li>
+        <li>¿Comprar en línea y usar cupón son independientes?</li>
+      </ol>
+    </div>
+    <div class="stepper" data-stepper>
+      <div class="g-legend"><span><span class="swatch" style="background:var(--hl-num)"></span>lo que me preguntan / numerador</span><span><span class="swatch" style="background:var(--hl-den)"></span>lo que ya sé / denominador</span><span><span class="swatch" style="background:var(--ok)"></span>resultado</span></div>
+      <div class="wstep"><div class="wh"><span class="k">1</span><h3>Nombro</h3></div><div class="wb">
+        <div class="name-row"><button type="button" class="ev rv" aria-label="Mostrar qué es A"><b>A</b> = <span class="rv-q">?</span><span class="rv-a">el cliente compra en línea</span></button><button type="button" class="ev rv" aria-label="Mostrar qué es B"><b>B</b> = <span class="rv-q">?</span><span class="rv-a">el cliente usa cupón</span></button></div>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">2</span><h3>Traduzco</h3></div><div class="wb">
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Dato</th><th>¿De quién habla?</th><th>Se escribe</th></tr>
+          <tr><td>el 40 % de los clientes <span class="fx-q">compra en línea</span></td><td>todos</td><td class="m">P(<span class="fx-q">A</span>) = 0.40</td></tr>
+          <tr><td><span class="fx-k">de los que compran en línea</span>, el 30 % <span class="fx-q">usa cupón</span></td><td>los que compran en línea</td><td class="m">P(<span class="fx-q">B</span> | <span class="fx-k">A</span>) = 0.30</td></tr>
+          <tr><td><span class="fx-k">de los que usan cupón</span>, el 60 % <span class="fx-q">compra en línea</span></td><td>los que usan cupón</td><td class="m">P(<span class="fx-q">A</span> | <span class="fx-k">B</span>) = 0.60</td></tr>
+        </table></div>
+        <p class="mp-title">¿Qué me piden? Cada pregunta del problema se escribe así:</p>
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Pregunta del problema</th><th>Se escribe</th></tr>
+          <tr><td>a) ¿Qué porcentaje compra en línea <b>y</b> usa cupón?</td><td class="m">P(<span class="fx-q">A</span> ∩ <span class="fx-q">B</span>)</td></tr>
+          <tr><td>a) ¿Qué porcentaje usa cupón?</td><td class="m">P(<span class="fx-q">B</span>)</td></tr>
+          <tr><td>b) <span class="fx-k">Si un cliente no compra en línea</span>, ¿probabilidad de que use cupón?</td><td class="m">P(<span class="fx-q">B</span> | <span class="fx-k">A'</span>)</td></tr>
+          <tr><td>c) ¿Comprar en línea y usar cupón son independientes?</td><td class="m">¿P(<span class="fx-q">B</span> | <span class="fx-k">A</span>) = P(<span class="fx-q">B</span>)?</td></tr>
+        </table></div>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">3</span><h3>Conecto</h3></div><div class="wb">
+        <div class="plan"><span class="tip-label">Orden de los cálculos</span><div class="plan-row"><span class="plan-step"><b>1</b> P(A ∩ B)</span><span class="plan-arr">→</span><span class="plan-step"><b>2</b> P(B)</span><span class="plan-arr">→</span><span class="plan-step"><b>3</b> P(B | A')</span><span class="plan-arr">→</span><span class="plan-step"><b>4</b> ¿independientes?</span></div><span class="plan-note">Cada cálculo usa el resultado del anterior.</span></div>
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Pregunta</th><th>Me piden</th><th>Fórmula que lo conecta</th><th>¿Tengo los datos?</th></tr>
+          <tr><td>a) ¿Qué porcentaje compra en línea y usa cupón?</td><td class="m">P(A ∩ B)</td><td class="m"><span class="chip chip-fx2">P(A ∩ B) = P(A) × P(B | A)</span></td><td><span class="ok-t">Sí: P(A) = 0.40 y P(B | A) = 0.30</span></td></tr>
+          <tr><td>a) ¿Qué porcentaje usa cupón?</td><td class="m">P(B)</td><td class="m"><span class="chip chip-fx2">P(B) = P(A ∩ B) ÷ P(A | B)</span></td><td><span class="warn-t">Me falta P(A ∩ B): sale de la fila anterior</span></td></tr>
+          <tr><td>b) Si no compra en línea, ¿probabilidad de que use cupón?</td><td class="m">P(B | A')</td><td class="m"><span class="chip chip-fx2">P(B | A') = P(B ∩ A') ÷ P(A')</span></td><td><span class="warn-t">Me faltan P(B ∩ A') y P(A'): los saco en el paso 4</span></td></tr>
+          <tr><td>c) ¿Son independientes?</td><td class="m">¿P(B | A) = P(B)?</td><td class="m"><span class="chip chip-fx2">Comparar P(B | A) con P(B)</span></td><td><span class="warn-t">Me falta P(B): sale de la fila 2</span></td></tr>
+        </table></div>
+        <div class="rule-card"><div class="rule-head"><span class="rule-badge">Regla</span>Multiplicación: una regla, dos formas</div><div class="rule-fx">P(A ∩ B) = P(A) · P(B | A) = P(B) · P(A | B)</div><p class="rule-sub">¿Cuál forma uso? Mira <b>qué condicional te da el problema</b>.</p><div class="rule-cases"><div class="case"><span class="case-tag">Si te dan</span><span class="case-fx">P(B | <span class="fx-k">A</span>)</span><span class="case-arrow">↓ usa</span><span class="case-fx case-use">P(<span class="fx-k">A</span>) · P(B | <span class="fx-k">A</span>)</span><span class="case-why">Lo que ya sé es <b>A</b></span></div><div class="case"><span class="case-tag">Si te dan</span><span class="case-fx">P(A | <span class="fx-k">B</span>)</span><span class="case-arrow">↓ usa</span><span class="case-fx case-use">P(<span class="fx-k">B</span>) · P(A | <span class="fx-k">B</span>)</span><span class="case-why">Lo que ya sé es <b>B</b></span></div></div><div class="rule-desp"><span class="tip-label">Despejar</span><div class="desp-row"><span class="chip chip-fx2">P(A | B) = P(A ∩ B) ÷ P(B)</span><span class="desp-arrow">⇅</span><span class="chip chip-fx2">P(A ∩ B) = P(B) · P(A | B)</span><span class="desp-arrow">⇅</span><span class="chip chip-fx2">P(B) = P(A ∩ B) ÷ P(A | B)</span></div><span class="desp-note">Es la misma fórmula despejada. Si tienes 2 de los 3 valores, despejas el que falta.</span></div><div class="rule-tip"><span class="tip-label">Truco</span><span>La probabilidad simple que multiplicas es la de <b>lo que está después de la barra</b>.</span></div><div class="rule-note"><span class="tip-label">Independientes</span><span class="mono">P(B | A) = P(B) → P(A ∩ B) = P(A) · P(B)</span></div></div>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">4</span><h3>Calculo</h3></div><div class="wb">
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Pregunta</th><th>Reemplazo en la fórmula</th><th>Resultado</th></tr>
+          <tr><td>a) ¿Qué porcentaje compra en línea y usa cupón?</td><td class="m">P(A ∩ B) = 0.40 × 0.30</td><td><span class="res">0.1200</span></td></tr>
+          <tr><td>a) ¿Qué porcentaje usa cupón?</td><td class="m">P(B) = <span class="hn">0.12</span> ÷ <span class="hd">0.60</span></td><td><span class="res">0.2000</span></td></tr>
+          <tr><td>b) Si no compra en línea, ¿probabilidad de que use cupón?</td><td class="m">P(B | A') = <span class="hn">0.08</span> ÷ <span class="hd">0.60</span><br><span class="flow-note">de dónde salen 0.08 y 0.60: ver abajo</span></td><td><span class="res">0.1333</span></td></tr>
+          <tr><td>c) ¿Son independientes?</td><td class="m">P(B | A) = 0.30 ≠ P(B) = 0.20</td><td><span class="res">No</span></td></tr>
+        </table></div>
+        <div class="ex-box">
+          <span class="eyebrow" style="color:var(--muted)">b) P(B | A') = P(B ∩ A') ÷ P(A'): primero saco los dos datos</span>
+          <div class="h-step"><span class="h-num">1</span><div><p><span class="hd">Denominador P(A')</span> Representa la probabilidad de que el cliente <b>no</b> compre en línea. Es el evento complementario a comprar en línea, P(A), por lo que se calcula restándole a 1 la probabilidad de P(A), que es 0.40 según el primer dato de la tabla:</p><p class="eqline">P(A') = 1 − 0.40 = <span class="res">0.60</span></p></div></div>
+          <div class="h-step"><span class="h-num">2</span><div><p><span class="hn">Numerador P(B ∩ A')</span> Como la tabla muestra que la probabilidad total de usar el cupón es 0.20 y que la probabilidad de usarlo comprando en línea es 0.12, solo debes hacer una resta lógica para aislar el dato que te falta. Al total general de personas que usan el cupón (0.20) le restas la porción de aquellos que sí compraron en línea (0.12):</p><p class="eqline">P(B ∩ A') = 0.20 − 0.12 = <span class="res">0.08</span></p><p>El sobrante, 0.08, corresponde exactamente a los clientes que usan el cupón y <b>no</b> compran en línea.</p></div></div>
+          <div class="h-step"><span class="h-num">3</span><div><p><b>Divido</b> el numerador entre el denominador:</p><p class="eqline">P(B | A') = <span class="hn">0.08</span> ÷ <span class="hd">0.60</span> = <span class="res">0.1333</span></p></div></div>
+        </div>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">5</span><h3>Compruebo e interpreto</h3></div><div class="wb">
+        <ul class="checks">
+          <li>Todos los resultados están entre 0 y 1.</li>
+          <li>La tabla completa suma 1.</li>
+        </ul>
+        <div class="tbl-wrap"><table class="pt" aria-label="Tabla completa">
+          <thead><tr><th></th><th>Usa cupón (B)</th><th>No usa (B')</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr><th class="rowh">En línea (A)</th><td class="cell">0.12</td><td class="cell">0.28</td><td class="marg">0.40</td></tr>
+            <tr><th class="rowh">No en línea (A')</th><td class="cell num">0.08</td><td class="cell">0.52</td><td class="marg den">0.60</td></tr>
+            <tr><th class="rowh">Total</th><td class="marg">0.20</td><td class="marg">0.80</td><td class="tot">1.00</td></tr>
+          </tbody>
+        </table></div>
+        <p>Con la tabla llena, el inciso b) se lee en la fila A': <span class="hn">0.08</span> ÷ <span class="hd">0.60</span> = <span class="res">0.1333</span>.</p>
+        <div class="interp">
+          <p><span class="res">0.12</span> El 12 % de los clientes compra en línea y usa cupón.</p>
+          <p><span class="res">0.20</span> En total, el 20 % de los clientes usa cupón.</p>
+          <p><span class="res">0.1333</span> De los que no compran en línea, solo el 13.33 % usa cupón, frente al 30 % de los que sí compran en línea.</p>
+          <p><span class="res">No</span> Comprar en línea está asociado con usar cupón: no son independientes.</p>
+        </div>
+      </div></div>
+      <div class="row-btns"><button class="btn" data-next>Mostrar el siguiente paso</button><button class="btn ghost" data-all>Mostrar todo</button><button class="btn ghost" data-reset>Ocultar</button></div>
+    </div>
+  </section>
+
+  <!-- EJEMPLO 2 -->
+  <section id="ejemplo2">
+    <header>
+      <span class="eyebrow">Ejercicio guiado 2 · 7 min · probabilidad total y Bayes</span>
+      <h2>Aseguradora y accidentes</h2>
+    </header>
+    <div class="panel problem">
+      <p>Una aseguradora clasifica a sus clientes así: 20 % de riesgo alto, 50 % de riesgo medio y 30 % de riesgo bajo. La probabilidad de tener un accidente en el año es 15 % si es de riesgo alto, 5 % si es de riesgo medio y 2 % si es de riesgo bajo.</p>
+      <ol type="a">
+        <li>¿Qué porcentaje de los clientes tiene un accidente en el año?</li>
+        <li>Si un cliente tuvo un accidente, ¿de qué grupo es más probable que provenga? Compara con la participación de cada grupo.</li>
+      </ol>
+    </div>
+    <div class="stepper" data-stepper>
+      <div class="g-legend"><span><span class="swatch" style="background:var(--hl-num)"></span>lo que me preguntan / numerador</span><span><span class="swatch" style="background:var(--hl-den)"></span>lo que ya sé / denominador</span><span><span class="swatch" style="background:var(--ok)"></span>resultado</span></div>
+      <div class="wstep"><div class="wh"><span class="k">1</span><h3>Nombro</h3></div><div class="wb">
+        <div class="name-row"><button type="button" class="ev rv" aria-label="Mostrar qué es A₁"><b>A₁</b> = <span class="rv-q">?</span><span class="rv-a">riesgo alto</span></button><button type="button" class="ev rv" aria-label="Mostrar qué es A₂"><b>A₂</b> = <span class="rv-q">?</span><span class="rv-a">riesgo medio</span></button><button type="button" class="ev rv" aria-label="Mostrar qué es A₃"><b>A₃</b> = <span class="rv-q">?</span><span class="rv-a">riesgo bajo</span></button><button type="button" class="ev rv" aria-label="Mostrar qué es B"><b>B</b> = <span class="rv-q">?</span><span class="rv-a">tiene accidente</span></button></div>
+        <p>Hay tres grupos, por eso se llaman A₁, A₂ y A₃. El evento que se repite en todos los grupos es B.</p>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">2</span><h3>Traduzco</h3></div><div class="wb">
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Dato</th><th>¿De quién habla?</th><th>Se escribe</th></tr>
+          <tr><td>el 20 % de los clientes <span class="fx-q">es de riesgo alto</span></td><td>todos</td><td class="m">P(<span class="fx-q">A₁</span>) = 0.20</td></tr>
+          <tr><td>el 50 % de los clientes <span class="fx-q">es de riesgo medio</span></td><td>todos</td><td class="m">P(<span class="fx-q">A₂</span>) = 0.50</td></tr>
+          <tr><td>el 30 % de los clientes <span class="fx-q">es de riesgo bajo</span></td><td>todos</td><td class="m">P(<span class="fx-q">A₃</span>) = 0.30</td></tr>
+          <tr><td>15 % <span class="fx-q">tiene accidente</span> <span class="fx-k">si es de riesgo alto</span></td><td>los de riesgo alto</td><td class="m">P(<span class="fx-q">B</span> | <span class="fx-k">A₁</span>) = 0.15</td></tr>
+          <tr><td>5 % <span class="fx-q">tiene accidente</span> <span class="fx-k">si es de riesgo medio</span></td><td>los de riesgo medio</td><td class="m">P(<span class="fx-q">B</span> | <span class="fx-k">A₂</span>) = 0.05</td></tr>
+          <tr><td>2 % <span class="fx-q">tiene accidente</span> <span class="fx-k">si es de riesgo bajo</span></td><td>los de riesgo bajo</td><td class="m">P(<span class="fx-q">B</span> | <span class="fx-k">A₃</span>) = 0.02</td></tr>
+        </table></div>
+        <p class="mp-title">¿Qué me piden? Cada pregunta del problema se escribe así:</p>
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Pregunta del problema</th><th>Se escribe</th></tr>
+          <tr><td>a) ¿Qué porcentaje de los clientes tiene un accidente?</td><td class="m">P(<span class="fx-q">B</span>)</td></tr>
+          <tr><td>b) <span class="fx-k">Si un cliente tuvo un accidente</span>, ¿probabilidad de que sea de riesgo alto?</td><td class="m">P(<span class="fx-q">A₁</span> | <span class="fx-k">B</span>)</td></tr>
+          <tr><td>b) … de riesgo medio</td><td class="m">P(<span class="fx-q">A₂</span> | <span class="fx-k">B</span>)</td></tr>
+          <tr><td>b) … de riesgo bajo</td><td class="m">P(<span class="fx-q">A₃</span> | <span class="fx-k">B</span>)</td></tr>
+        </table></div>
+        <p>Ojo: me dieron <span class="mono">P(B | grupo)</span> y en b) me piden <span class="mono">P(grupo | B)</span>: la condicional <b>al revés</b>. Esa es la señal de Bayes.</p>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">3</span><h3>Conecto</h3></div><div class="wb">
+        <div class="plan"><span class="tip-label">Orden de los cálculos</span><div class="plan-row"><span class="plan-step"><b>1</b> P(B) con probabilidad total</span><span class="plan-arr">→</span><span class="plan-step"><b>2</b> Bayes para cada grupo</span></div><span class="plan-note">Bayes necesita P(B), por eso va primero.</span></div>
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Pregunta</th><th>Me piden</th><th>Fórmula que lo conecta</th><th>¿Tengo los datos?</th></tr>
+          <tr><td>a) ¿Qué porcentaje tiene un accidente?</td><td class="m">P(B)</td><td class="m"><span class="chip chip-fx2">P(B) = P(A₁)·P(B | A₁) + P(A₂)·P(B | A₂) + P(A₃)·P(B | A₃)</span></td><td><span class="ok-t">Sí: los 6 datos del paso 2</span></td></tr>
+          <tr><td>b) Si tuvo accidente, ¿probabilidad de que sea de riesgo alto?</td><td class="m">P(A₁ | B)</td><td class="m"><span class="chip chip-fx2">P(A₁ | B) = P(A₁)·P(B | A₁) ÷ P(B)</span></td><td><span class="warn-t">Me falta P(B): sale de la fila a)</span></td></tr>
+          <tr><td>b) … de riesgo medio</td><td class="m">P(A₂ | B)</td><td class="m"><span class="chip chip-fx2">P(A₂ | B) = P(A₂)·P(B | A₂) ÷ P(B)</span></td><td><span class="warn-t">Me falta P(B): sale de la fila a)</span></td></tr>
+          <tr><td>b) … de riesgo bajo</td><td class="m">P(A₃ | B)</td><td class="m"><span class="chip chip-fx2">P(A₃ | B) = P(A₃)·P(B | A₃) ÷ P(B)</span></td><td><span class="warn-t">Me falta P(B): sale de la fila a)</span></td></tr>
+        </table></div>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">4</span><h3>Calculo</h3></div><div class="wb">
+        <div class="mini-wrap"><table class="mini">
+          <tr><th>Pregunta</th><th>Reemplazo en la fórmula</th><th>Resultado</th></tr>
+          <tr><td>a) ¿Qué porcentaje tiene un accidente?</td><td class="m">P(B) = 0.20 × 0.15 + 0.50 × 0.05 + 0.30 × 0.02<br>= 0.030 + 0.025 + 0.006</td><td><span class="res">0.0610</span></td></tr>
+          <tr><td>b) Si tuvo accidente, ¿probabilidad de que sea de riesgo alto?</td><td class="m">P(A₁ | B) = <span class="hn">0.030</span> ÷ <span class="hd">0.061</span></td><td><span class="res">0.4918</span></td></tr>
+          <tr><td>b) … de riesgo medio</td><td class="m">P(A₂ | B) = <span class="hn">0.025</span> ÷ <span class="hd">0.061</span></td><td><span class="res">0.4098</span></td></tr>
+          <tr><td>b) … de riesgo bajo</td><td class="m">P(A₃ | B) = <span class="hn">0.006</span> ÷ <span class="hd">0.061</span></td><td><span class="res">0.0984</span></td></tr>
+        </table></div>
+        <div class="ex-box">
+          <span class="eyebrow" style="color:var(--muted)">¿Por qué se suma en a) y se divide en b)?</span>
+          <p>Un accidente puede venir de <b>cualquiera de los tres grupos</b>. Cada grupo aporta su parte: <b>su porcentaje × su tasa de accidentes</b>.</p>
+          <div class="mini-wrap"><table class="mini">
+            <tr><th>Grupo</th><th>P(Aᵢ)</th><th>× P(B | Aᵢ)</th><th>= aporta al total</th></tr>
+            <tr><td>Alto (A₁)</td><td class="m">0.20</td><td class="m">0.15</td><td class="m">0.030</td></tr>
+            <tr><td>Medio (A₂)</td><td class="m">0.50</td><td class="m">0.05</td><td class="m">0.025</td></tr>
+            <tr><td>Bajo (A₃)</td><td class="m">0.30</td><td class="m">0.02</td><td class="m">0.006</td></tr>
+            <tr><td><b>Total</b></td><td class="m">1.00</td><td></td><td class="m"><span class="res">0.061</span></td></tr>
+          </table></div>
+          <p><b>a) Probabilidad total</b> = sumar lo que aporta cada grupo.</p>
+          <p><b>b) Bayes</b> = lo que aporta un grupo ÷ el total. Lo que ya sé es "tuvo accidente", así que P(B) va en el denominador.</p>
+        </div>
+      </div></div>
+      <div class="wstep"><div class="wh"><span class="k">5</span><h3>Compruebo e interpreto</h3></div><div class="wb">
+        <ul class="checks">
+          <li>Todos los resultados están entre 0 y 1.</li>
+          <li>Las tres probabilidades de Bayes suman 1: 0.4918 + 0.4098 + 0.0984 = 1.0000.</li>
+        </ul>
+        <div class="bars" aria-label="Participación de cada grupo frente a su peso en los accidentes">
+          <div class="bar-row"><span>Alto</span><div class="bar-stack"><div class="bar part" style="width:20%"><span>20 %</span></div><div class="bar post" style="width:49.18%"><span>49.2 %</span></div></div></div>
+          <div class="bar-row"><span>Medio</span><div class="bar-stack"><div class="bar part" style="width:50%"><span>50 %</span></div><div class="bar post" style="width:40.98%"><span>41.0 %</span></div></div></div>
+          <div class="bar-row"><span>Bajo</span><div class="bar-stack"><div class="bar part" style="width:30%"><span>30 %</span></div><div class="bar post" style="width:9.84%"><span>9.8 %</span></div></div></div>
+          <div class="bar-legend"><span><span class="swatch" style="background:var(--line)"></span>participación en los clientes</span><span><span class="swatch" style="background:var(--accent)"></span>participación en los accidentes</span></div>
+        </div>
+        <div class="interp">
+          <p><span class="res">0.061</span> El 6.1 % de los clientes tiene un accidente en el año.</p>
+          <p><span class="res">0.4918</span> Si un cliente tuvo un accidente, lo más probable es que sea de riesgo alto.</p>
+          <p><span class="res">20 → 49 %</span> El grupo alto es solo el 20 % de los clientes, pero aporta casi la mitad de los accidentes porque su tasa es la más alta.</p>
+          <p><span class="res">50 → 41 %</span> El grupo medio es el más grande, pero aporta menos de lo que pesa en la cartera.</p>
+        </div>
+      </div></div>
+      <div class="row-btns"><button class="btn" data-next>Mostrar el siguiente paso</button><button class="btn ghost" data-all>Mostrar todo</button><button class="btn ghost" data-reset>Ocultar</button></div>
+    </div>
+    <div class="panel now-you">
+      <span class="eyebrow">Ahora tú · 10 min</span>
+      <h3>Quiz en papel: un ejercicio con los 5 pasos</h3>
+      <p>Resuélvelo escribiendo cada paso: <b>Nombro → Traduzco → Conecto → Calculo → Compruebo</b>. Antes de cualquier cuenta, escribe todos los datos y la pregunta como P( ).</p>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Nombro → Traduzco → Conecto → Calculo → Compruebo.</b> Antes de cualquier cuenta, escribe todos los datos y la pregunta como P( ).</p>
+    <p class="sign">Creado por el Ing. Carlos Sánchez</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  /* ---------- Pipeline ---------- */
+  var STEPS = [
+    { t: "Nombro", d: "Leo el problema, identifico de qué cosas habla y le pongo una letra a cada una. Si una característica tiene varias opciones (diurna, nocturna, virtual), cada opción tiene su letra.", q: "¿De qué dos cosas habla el problema? ¿Cuál será A y cuál B?", a: "El problema habla de estudiantes que <b>trabajan</b> y que <b>tienen beca</b>. Entonces: <b>A = trabaja</b> y <b>B = tiene beca</b>." },
+    { t: "Traduzco", d: "Escribo cada dato <b>y la pregunta</b> como P( ). Todavía no calculo nada. Si no sé escribirlo como P( ), todavía no entendí el problema.", q: "¿De quién habla este número? ¿De todos, de un grupo, o de los que tienen las dos cosas?", a: "El 48 % habla de todos → P(A) = 0.48. El 25 % habla de los que trabajan → P(B | A) = 0.25." },
+    { t: "Conecto", d: "Elijo la fórmula. Miro lo que tengo (los datos que escribí como P( ) en el paso 2) y lo que me piden, y busco la fórmula que une las dos cosas. Si me falta un dato, primero lo calculo con otra fórmula.", q: "¿Tengo todo lo que necesita esta fórmula?", a: "Sí: P(A ∩ B) = P(A) × P(B | A) necesita P(A) = 0.48 y P(B | A) = 0.25, y los dos los tengo." },
+    { t: "Calculo", d: "Reemplazo los valores y opero con 4 decimales.", q: "¿Puse cada número en su lugar? Si hay división, ¿el denominador es lo que ya sé?", a: "Sí: P(A) = 0.48 y P(B | A) = 0.25, entonces 0.48 × 0.25 = 0.1200. Aquí no hay división." },
+    { t: "Compruebo", d: "Reviso que el resultado esté entre 0 y 1, que las partes sumen el total y que tenga sentido. Luego lo digo con una frase del problema.", q: "¿Puedo explicar el resultado en una frase sin símbolos?", a: "Sí: 0.12 → el 12 % de los estudiantes trabaja y tiene beca." }
+  ];
+  var pipe = $("pipeline");
+  STEPS.forEach(function (s, i) {
+    var b = el("button", "step-btn", '<span class="n">paso ' + (i + 1) + '</span><span class="t">' + s.t + "</span>");
+    b.type = "button";
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    b.addEventListener("click", function () { showStep(i); });
+    pipe.appendChild(b);
+  });
+  var EXTRA = [
+    '<div class="ex-quote"><span class="eyebrow" style="color:var(--muted)">Ejemplo · el problema</span><p>El 48 % de los estudiantes trabaja. De los que trabajan, el 25 % tiene beca. ¿Qué porcentaje trabaja y tiene beca?</p></div>',
+    '',
+    '<div class="ex-flow"><span class="eyebrow" style="color:var(--muted)">Ejemplo</span><div class="flow-row"><span class="flow-lbl">Tengo</span><span class="chip chip-have">P(A) = 0.48</span><span class="chip chip-have">P(B | A) = 0.25</span></div><div class="flow-arrow">↓</div><div class="flow-row"><span class="flow-lbl">Me piden</span><span class="chip chip-want">P(A ∩ B)</span></div><div class="flow-arrow">↓</div><div class="flow-row"><span class="flow-lbl">Fórmula</span><span class="chip chip-fx">P(A ∩ B) = P(A) × P(B | A)</span><span class="flow-note">usa justo los dos datos que tengo</span></div></div><div class="rule-card"><div class="rule-head"><span class="rule-badge">Regla</span>Multiplicación: una regla, dos formas</div><div class="rule-fx">P(A ∩ B) = P(A) · P(B | A) = P(B) · P(A | B)</div><p class="rule-sub">¿Cuál forma uso? Mira <b>qué condicional te da el problema</b>.</p><div class="rule-cases"><div class="case"><span class="case-tag">Si te dan</span><span class="case-fx">P(B | <span class="fx-k">A</span>)</span><span class="case-arrow">↓ usa</span><span class="case-fx case-use">P(<span class="fx-k">A</span>) · P(B | <span class="fx-k">A</span>)</span><span class="case-why">Lo que ya sé es <b>A</b></span></div><div class="case"><span class="case-tag">Si te dan</span><span class="case-fx">P(A | <span class="fx-k">B</span>)</span><span class="case-arrow">↓ usa</span><span class="case-fx case-use">P(<span class="fx-k">B</span>) · P(A | <span class="fx-k">B</span>)</span><span class="case-why">Lo que ya sé es <b>B</b></span></div></div><div class="rule-desp"><span class="tip-label">Despejar</span><div class="desp-row"><span class="chip chip-fx2">P(A | B) = P(A ∩ B) ÷ P(B)</span><span class="desp-arrow">⇅</span><span class="chip chip-fx2">P(A ∩ B) = P(B) · P(A | B)</span><span class="desp-arrow">⇅</span><span class="chip chip-fx2">P(B) = P(A ∩ B) ÷ P(A | B)</span></div><span class="desp-note">Es la misma fórmula despejada. Si tienes 2 de los 3 valores, despejas el que falta.</span></div><div class="rule-tip"><span class="tip-label">Truco</span><span>La probabilidad simple que multiplicas es la de <b>lo que está después de la barra</b>.</span></div><div class="rule-note"><span class="tip-label">Independientes</span><span class="mono">P(B | A) = P(B) → P(A ∩ B) = P(A) · P(B)</span></div></div>',
+    '<div class="ex-flow"><span class="eyebrow" style="color:var(--muted)">Ejemplo</span><div class="flow-row"><span class="flow-lbl">Fórmula</span><span class="chip chip-fx">P(A ∩ B) = P(A) × P(B | A)</span></div><div class="flow-arrow">↓</div><div class="flow-row"><span class="flow-lbl">Reemplazo</span><span class="chip chip-have">0.48 × 0.25</span></div><div class="flow-arrow">↓</div><div class="flow-row"><span class="flow-lbl">Resultado</span><span class="res">0.1200</span><span class="flow-note">con 4 decimales</span></div></div>',
+    '<div class="ex-flow"><span class="eyebrow" style="color:var(--muted)">Ejemplo</span><div class="flow-row"><span class="flow-lbl">Resultado</span><span class="res">0.1200</span></div><div class="flow-arrow">↓</div><div class="flow-row"><span class="flow-lbl">Reviso</span><span class="chk">✓ Está entre 0 y 1</span><span class="chk">✓ Las partes suman el total</span><span class="chk">✓ Tiene sentido con los datos</span></div><div class="flow-arrow">↓</div><div class="flow-row"><span class="flow-lbl">Lo digo</span><span class="chip chip-say">El 12 % de los estudiantes trabaja y tiene beca.</span></div></div>'
+  ];
+  var parking = document.createElement("div"); parking.hidden = true; document.body.appendChild(parking);
+  function showStep(i) {
+    Array.prototype.forEach.call(pipe.children, function (b, k) { b.setAttribute("aria-pressed", k === i ? "true" : "false"); });
+    var s = STEPS[i], molde = $("molde");
+    parking.appendChild(molde);
+    $("stepDetail").innerHTML = '<h3>Paso ' + (i + 1) + ". " + s.t + "</h3><p>" + s.d + '</p>' + EXTRA[i] + '<div id="stepSlot"></div><p class="q">Pregunta de control: <b>' + s.q + '</b></p><p class="ans">Respuesta: ' + s.a + '</p>';
+    if (i === 1) { $("stepSlot").appendChild(molde); }
+    $("stepPager").innerHTML =
+      (i > 0 ? '<button class="btn step-nav" type="button" data-step="' + (i - 1) + '">← Paso ' + i + ': ' + STEPS[i - 1].t + '</button>' : '<span></span>') +
+      (i < STEPS.length - 1 ? '<button class="btn step-nav step-next" type="button" data-step="' + (i + 1) + '">Paso ' + (i + 2) + ': ' + STEPS[i + 1].t + ' →</button>' : '<span></span>');
+    Array.prototype.forEach.call($("stepPager").querySelectorAll("[data-step]"), function (b) {
+      b.addEventListener("click", function () { showStep(+b.getAttribute("data-step")); });
+    });
+    molde.hidden = i !== 1;
+    $("mirror").hidden = i !== 4;
+  }
+  showStep(0);
+
+
+  /* ---------- Molde ---------- */
+  var FILL = [
+    { s: "De los que trabajan, el 25 % tiene beca.", q: "B", qd: "tiene beca", k: "A", kd: "trabaja" },
+    { s: "De los que tienen beca, el 40 % trabaja.", q: "A", qd: "trabaja", k: "B", kd: "tiene beca" },
+    { s: "Si un cliente compra en línea, ¿probabilidad de que use cupón?", q: "B", qd: "usa cupón", k: "A", kd: "compra en línea" },
+    { s: "Si un estudiante no trabaja, ¿probabilidad de que tenga beca?", q: "B", qd: "tiene beca", k: "A'", kd: "no trabaja" }
+  ];
+  var fb = $("fillBtns");
+  FILL.forEach(function (f, i) {
+    var b = el("button", "fill-btn", f.s); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { showFill(i); });
+    fb.appendChild(b);
+  });
+  function showFill(i) {
+    var f = FILL[i];
+    Array.prototype.forEach.call(fb.children, function (b, k) { b.setAttribute("aria-pressed", k === i ? "true" : "false"); });
+    $("fillOut").innerHTML =
+      '<div class="who"><span class="fq">Lo que me preguntan: <b>' + f.q + '</b> = ' + f.qd + '</span><span class="fk">Lo que ya sé: <b>' + f.k + '</b> = ' + f.kd + '</span></div>' +
+      '<div class="molde-fx" style="justify-content:flex-start"><span>P(</span><span class="a">' + f.q + '</span><span>|</span><span class="b">' + f.k + '</span><span>)</span><span class="eqs">=</span><span>P(</span><span class="a">' + f.q + '</span><span>∩</span><span class="b">' + f.k + '</span><span>)</span><span class="eqs">÷</span><span>P(</span><span class="b">' + f.k + '</span><span>)</span></div>';
+  }
+  showFill(0);
+
+  /* ---------- Navegación por secciones ---------- */
+  var links = document.querySelectorAll("#navlinks a");
+  var secs = Array.prototype.slice.call(document.querySelectorAll("main section[id]"));
+  var hero = document.querySelector("header.hero");
+  var ids = secs.map(function (x) { return x.id; });
+  secs.forEach(function (sec, i) {
+    var pager = el("div", "pager");
+    var prev = i > 0 ? secs[i - 1] : null, next = i < secs.length - 1 ? secs[i + 1] : null;
+    var lab = function (x) { var a = document.querySelector('#navlinks a[href="#' + x.id + '"]'); return a ? a.textContent : ""; };
+    if (prev) { var pb = el("button", "btn ghost", "← Volver a " + lab(prev)); pb.type = "button"; pb.addEventListener("click", function () { go(prev.id); }); pager.appendChild(pb); }
+    else pager.appendChild(el("span"));
+    if (next) { var nb = el("button", "btn", "Siguiente sección: " + lab(next) + " →"); nb.type = "button"; nb.addEventListener("click", function () { go(next.id); }); pager.appendChild(nb); }
+    sec.appendChild(pager);
+  });
+  function go(id) {
+    if (ids.indexOf(id) < 0) id = ids[0];
+    secs.forEach(function (x) { x.hidden = x.id !== id; });
+    hero.hidden = id !== ids[0];
+    Array.prototype.forEach.call(links, function (a) {
+      var on = a.getAttribute("href") === "#" + id;
+      if (on) {
+        a.setAttribute("aria-current", "true");
+        var box = a.parentNode, l = a.offsetLeft, r = l + a.offsetWidth;
+        if (l < box.scrollLeft) box.scrollLeft = l - 16;
+        else if (r > box.scrollLeft + box.clientWidth) box.scrollLeft = r - box.clientWidth + 16;
+      } else a.removeAttribute("aria-current");
+    });
+    window.scrollTo(0, 0);
+  }
+  Array.prototype.forEach.call(links, function (a) {
+    a.addEventListener("click", function (e) { e.preventDefault(); go(a.getAttribute("href").slice(1)); });
+  });
+  go((location.hash || "").slice(1));
+
+  /* ---------- Traductor ---------- */
+  var OPTS = ["P(A)", "P(A')", "P(B | A)", "P(A | B)", "P(A ∩ B)", "P(A ∪ B)", "P(B | A')", "P(A' | B)"];
+  var TRANS = [
+    { s: "El 48 % de los estudiantes <span class='kq'>trabaja</span>.", a: "P(A)", e: "Habla de <b>todos</b> los estudiantes: es una probabilidad simple de A." },
+    { s: "<span class='kk'>De los estudiantes que trabajan</span>, el 25 % <span class='kq'>tiene beca</span>.", a: "P(B | A)", e: "\"De los que trabajan\" es lo que ya sé: A va <b>después de la barra</b>. Lo que preguntan es la beca, B." },
+    { s: "<span class='kk'>De los estudiantes con beca</span>, el 40 % <span class='kq'>trabaja</span>.", a: "P(A | B)", e: "Ahora lo que ya sé es \"con beca\": B va después de la barra. Ojo: es distinto de la frase anterior." },
+    { s: "El 12 % de los estudiantes <span class='kq'>trabaja <span class='op'>y</span> tiene beca</span>.", a: "P(A ∩ B)", e: "\"Trabaja <b>y</b> tiene beca\", contado sobre todos: es una <b>intersección</b>." },
+    { s: "El 52 % de los estudiantes <span class='kq'><span class='op'>no</span> trabaja</span>.", a: "P(A')", e: "\"No trabaja\" es el <b>complemento</b> de A: 1 − 0.48 = 0.52." },
+    { s: "<span class='kk'>Si un estudiante no trabaja</span>, ¿cuál es la probabilidad de que <span class='kq'>tenga beca</span>?", a: "P(B | A')", e: "\"Si no trabaja\" es lo que ya sé: A' va después de la barra. Lo que preguntan es la beca, B." },
+    { s: "¿Qué porcentaje de los estudiantes <span class='kq'>trabaja <span class='op'>o</span> tiene beca</span>?", a: "P(A ∪ B)", e: "\"Trabaja <b>o</b> tiene beca\" es una <b>unión</b>: P(A) + P(B) − P(A ∩ B)." },
+    { s: "<span class='kk'>Entre los estudiantes con beca</span>, ¿qué porcentaje <span class='kq'>no trabaja</span>?", a: "P(A' | B)", e: "\"Entre los que tienen beca\" es la condición: B después de la barra. Lo que preguntan es \"no trabaja\": A'." }
+  ];
+  function fmtP(o) {
+    var m = /^P\((.+) \| (.+)\)$/.exec(o);
+    if (m) return "P(<span class='q'>" + m[1] + "</span> | <span class='k'>" + m[2] + "</span>)";
+    var m2 = /^P\((.+)\)$/.exec(o);
+    return m2 ? "P(" + m2[1].replace(/([AB]'?)/g, "<span class='q'>$1</span>") + ")" : o;
+  }
+  var tI = 0, tOk = 0, tAnswered = false;
+  function renderT() {
+    var it = TRANS[tI];
+    $("tCount").textContent = "Frase " + (tI + 1) + " de " + TRANS.length;
+    $("tProg").style.width = (tI / TRANS.length * 100) + "%";
+    $("tSentence").innerHTML = it.s;
+    $("tSentence").classList.toggle("hide-kw", !$("kwToggle").checked);
+    $("tFeedback").innerHTML = "";
+    $("tNext").disabled = true;
+    $("tNext").textContent = tI === TRANS.length - 1 ? "Ver resultado" : "Siguiente frase";
+    tAnswered = false;
+    var box = $("tOpts"); box.innerHTML = "";
+    OPTS.forEach(function (o) {
+      var b = el("button", "opt"); b.textContent = o; b.type = "button"; b.dataset.v = o;
+      b.addEventListener("click", function () { answerT(b, o); });
+      box.appendChild(b);
+    });
+    $("tScore").textContent = "Aciertos: " + tOk;
+  }
+  function answerT(btn, o) {
+    if (tAnswered) return;
+    tAnswered = true;
+    var it = TRANS[tI], good = o === it.a;
+    if (good) tOk++;
+    Array.prototype.forEach.call($("tOpts").children, function (b) {
+      b.disabled = true;
+      if (b.dataset.v === it.a) b.classList.add("right");
+    });
+    if (!good) btn.classList.add("wrong");
+    $("tFeedback").innerHTML = '<div class="feedback ' + (good ? "ok" : "no") + '"><b>' + (good ? "Correcto: " + fmtP(it.a).replace(/class='q'/g, "class='fx-q'").replace(/class='k'/g, "class='fx-k'") + ". " : "Era " + fmtP(it.a).replace(/class='q'/g, "class='fx-q'").replace(/class='k'/g, "class='fx-k'") + ". ") + "</b>" + it.e + "</div>";
+    $("tNext").disabled = false;
+    $("tScore").textContent = "Aciertos: " + tOk;
+  }
+  $("tNext").addEventListener("click", function () {
+    if (tI < TRANS.length - 1) { tI++; renderT(); }
+    else {
+      $("tProg").style.width = "100%";
+      $("tSentence").innerHTML = "Terminaste: " + tOk + " de " + TRANS.length + " aciertos.";
+      $("tOpts").innerHTML = "";
+      $("tFeedback").innerHTML = '<div class="feedback ' + (tOk >= 6 ? "ok" : "no") + '">' + (tOk >= 6 ? "Buen trabajo. Ya sabes traducir: ese es el 80 % del problema." : "Repasa la regla de oro: lo que va después de \"de los que\", \"si\" o \"entre\" va después de la barra.") + "</div>";
+      $("tNext").disabled = true;
+    }
+  });
+  $("tRestart").addEventListener("click", function () { tI = 0; tOk = 0; renderT(); });
+  $("kwToggle").addEventListener("change", function () { $("tSentence").classList.toggle("hide-kw", !this.checked); });
+  renderT();
+
+  /* ---------- Revelar respuestas ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".rv"), function (b) {
+    b.addEventListener("click", function () { b.classList.toggle("shown"); });
+  });
+
+  /* ---------- Revelar por partes dentro de cada paso ---------- */
+  function setupReveal(wb) {
+    if (wb.querySelector(".rv")) return null;
+    var units = [];
+    Array.prototype.forEach.call(wb.children, function (c) {
+      var tbl = c.classList.contains("mini-wrap") ? c.querySelector("table.mini") : null;
+      if (tbl) {
+        var rows = tbl.querySelectorAll("tr");
+        Array.prototype.forEach.call(rows, function (tr, k) {
+          if (k === 0) return;
+          units.push(tr);
+          Array.prototype.forEach.call(tr.children, function (td, j) {
+            if (j === 0) return;
+            td.innerHTML = '<div class="cell-c">' + td.innerHTML + '</div>';
+            td.title = "Toca para ver";
+            units.push(td);
+          });
+        });
+      } else if (c.tagName === "UL") {
+        Array.prototype.forEach.call(c.children, function (li) { units.push(li); });
+      } else if (c.classList.contains("interp")) {
+        Array.prototype.forEach.call(c.children, function (x) { units.push(x); });
+      } else {
+        units.push(c);
+      }
+    });
+    if (units.length < 2) return null;
+    var ctl = el("div", "reveal-ctl");
+    var nb = el("button", "btn step-nav step-next"); nb.type = "button";
+    var ab = el("button", "btn ghost", "Mostrar todo el paso"); ab.type = "button";
+    var cnt = el("span", "rv-count");
+    ctl.appendChild(nb); ctl.appendChild(ab); ctl.appendChild(cnt);
+    wb.appendChild(ctl);
+    var on = units.map(function () { return false; });
+    function count() { return on.filter(Boolean).length; }
+    function paint() {
+      units.forEach(function (u, i) {
+        if (u.tagName === "TD" || u.tagName === "TH") u.classList.toggle("veil", !on[i]);
+        else u.hidden = !on[i];
+      });
+      var c = count();
+      nb.textContent = c === 0 ? "Empezar" : "Mostrar siguiente";
+      cnt.textContent = c + " / " + units.length;
+      ctl.hidden = c >= units.length;
+    }
+    function setAll(v) { for (var i = 0; i < on.length; i++) on[i] = v; paint(); }
+    nb.addEventListener("click", function () { var i = on.indexOf(false); if (i >= 0) { on[i] = true; paint(); } });
+    ab.addEventListener("click", function () { setAll(true); });
+    units.forEach(function (u, i) {
+      if (u.tagName !== "TD" && u.tagName !== "TH") return;
+      u.addEventListener("click", function () { if (!on[i]) { on[i] = true; paint(); } });
+    });
+    paint();
+    return { all: function () { setAll(true); }, reset: function () { setAll(false); } };
+  }
+
+  /* ---------- Steppers ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-stepper]"), function (st) {
+    var steps = st.querySelectorAll(".wstep");
+    var reveals = [];
+    Array.prototype.forEach.call(st.querySelectorAll(".wb"), function (wb) { var rv = setupReveal(wb); if (rv) reveals.push(rv); });
+    var shown = 1;
+    function paint() {
+      Array.prototype.forEach.call(steps, function (s, i) { s.classList.toggle("locked", i >= shown); });
+      var nb = st.querySelector("[data-next]");
+      nb.disabled = shown >= steps.length;
+      nb.textContent = shown >= steps.length ? "Resuelto" : "Mostrar el paso " + (shown + 1);
+    }
+    st.querySelector("[data-next]").addEventListener("click", function () { if (shown < steps.length) { shown++; paint(); steps[shown - 1].scrollIntoView({ block: "nearest", behavior: "smooth" }); } });
+    st.querySelector("[data-all]").addEventListener("click", function () { shown = steps.length; paint(); reveals.forEach(function (r) { r.all(); }); Array.prototype.forEach.call(st.querySelectorAll(".rv"), function (x) { x.classList.add("shown"); }); });
+    st.querySelector("[data-reset]").addEventListener("click", function () { shown = 1; paint(); reveals.forEach(function (r) { r.reset(); }); Array.prototype.forEach.call(st.querySelectorAll(".rv"), function (x) { x.classList.remove("shown"); }); });
+    paint();
+  });
+
+})();
+</script>
+
+</body></html>
